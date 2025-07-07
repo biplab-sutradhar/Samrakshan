@@ -5,7 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -14,8 +15,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CaseResponseDTO {
     private UUID id;
-    private String complainant;
-    private String address;
-    private String caseDetails;
-    private LocalDate marriageDate;
+    private String complainantName;
+    private String complainantPhone;
+    private String caseAddress;
+    private String description;
+    private LocalDateTime reportedAt;
+    private UUID createdBy;
+    private String status;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private List<CaseDetailsDTO> caseDetails; // List of associated case details
 }

@@ -36,10 +36,11 @@ public class ReportService {
                 .orElseThrow(() -> new RuntimeException("Person not found with ID: " + reportRequestDTO.getSubmittedBy()));
 
         Report report = new Report();
-        report.setCaseRef(caseRef);
+        report.setCaseId(caseRef);
         report.setSubmittedBy(submittedBy);
-        report.setReportDetails(reportRequestDTO.getReportDetails());
-        report.setSubmissionDate(LocalDateTime.now());
+        report.setDepartment(reportRequestDTO.getDepartment());
+        report.setContent(reportRequestDTO.getContent());
+        report.setSubmittedAt(LocalDateTime.now());
         Report savedReport = reportRepository.save(report);
 
         return mapToResponseDTO(savedReport);
@@ -62,9 +63,10 @@ public class ReportService {
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Report not found with ID: " + id));
 
-        // Only update report details; caseRef and submittedBy are immutable
-        report.setReportDetails(reportRequestDTO.getReportDetails());
-        report.setSubmissionDate(LocalDateTime.now()); // Update timestamp on modification
+        // Update only mutable fields
+        report.setDepartment(reportRequestDTO.getDepartment());
+        report.setContent(reportRequestDTO.getContent());
+        report.setSubmittedAt(LocalDateTime.now()); // Update timestamp on modification
         Report updatedReport = reportRepository.save(report);
 
         return mapToResponseDTO(updatedReport);
@@ -79,10 +81,11 @@ public class ReportService {
     private ReportResponseDTO mapToResponseDTO(Report report) {
         return new ReportResponseDTO(
                 report.getId(),
-                report.getCaseRef().getId(),
+                report.getCaseId().getId(),
                 report.getSubmittedBy().getId(),
-                report.getReportDetails(),
-                report.getSubmissionDate()
+                report.getDepartment(),
+                report.getContent(),
+                report.getSubmittedAt()
         );
     }
 }

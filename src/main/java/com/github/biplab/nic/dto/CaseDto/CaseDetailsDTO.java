@@ -1,6 +1,5 @@
-package com.github.biplab.nic.dto.ReportDto;
+package com.github.biplab.nic.dto.CaseDto;
 
-import com.github.biplab.nic.enums.Department;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,11 +12,11 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReportResponseDTO {
+public class CaseDetailsDTO {
     private UUID id;
     private UUID caseId;
-    private UUID submittedBy;
-    private Department department;
-    private String content;
-    private LocalDateTime submittedAt;
+    private String notes;
+    private String evidencePath;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

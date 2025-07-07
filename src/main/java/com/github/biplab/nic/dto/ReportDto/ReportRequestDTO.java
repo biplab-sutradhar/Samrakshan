@@ -1,5 +1,6 @@
 package com.github.biplab.nic.dto.ReportDto;
 
+import com.github.biplab.nic.enums.Department;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,9 @@ public class ReportRequestDTO {
     @NotNull(message = "Submitted by ID is required")
     private UUID submittedBy;
 
-    @NotBlank(message = "Report details are required")
-    private String reportDetails;
+    @NotNull(message = "Department is required")
+    private Department department;
+
+    @NotBlank(message = "Content is required")
+    private String content;
 }
