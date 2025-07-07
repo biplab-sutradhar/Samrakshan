@@ -23,7 +23,7 @@ public class Report {
 
     @ManyToOne
     @JoinColumn(name = "case_id", nullable = false)
-    private ChildMarriageCase caseId;
+    private ChildMarriageCase caseRefId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "department", nullable = false)

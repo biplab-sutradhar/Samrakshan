@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -50,7 +51,7 @@ public class ChildMarriageCase {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "caseId", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CaseDetails> caseDetails;
+    private List<CaseDetails> caseDetails = new ArrayList<>(); // Initialize as empty list
 
     @PrePersist
     protected void onCreate() {

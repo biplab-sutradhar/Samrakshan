@@ -19,9 +19,14 @@ public class PersonService {
 
     public PersonResponseDTO createPerson(PersonRequestDTO personRequestDTO) {
         Person person = new Person();
-        person.setName(personRequestDTO.getName());
-        person.setContactNo(personRequestDTO.getContactNo());
+        person.setFirstName(personRequestDTO.getFirstName());
+        person.setLastName(personRequestDTO.getLastName());
+        person.setEmail(personRequestDTO.getEmail());
+        person.setPhoneNumber(personRequestDTO.getPhoneNumber());
+        person.setGender(personRequestDTO.getGender());
+        person.setAddress(personRequestDTO.getAddress());
         person.setRole(personRequestDTO.getRole());
+        person.setDepartment(personRequestDTO.getDepartment());
         Person savedPerson = personRepository.save(person);
         return mapToResponseDTO(savedPerson);
     }
@@ -41,9 +46,16 @@ public class PersonService {
     private PersonResponseDTO mapToResponseDTO(Person person) {
         return new PersonResponseDTO(
                 person.getId(),
-                person.getName(),
-                person.getContactNo(),
-                person.getRole()
+                person.getFirstName(),
+                person.getLastName(),
+                person.getEmail(),
+                person.getPhoneNumber(),
+                person.getGender(),
+                person.getAddress(),
+                person.getRole(),
+                person.getDepartment(),
+                person.getCreatedAt(),
+                person.getUpdatedAt()
         );
     }
 }

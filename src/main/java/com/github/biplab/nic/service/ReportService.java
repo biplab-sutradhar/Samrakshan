@@ -36,7 +36,7 @@ public class ReportService {
                 .orElseThrow(() -> new RuntimeException("Person not found with ID: " + reportRequestDTO.getSubmittedBy()));
 
         Report report = new Report();
-        report.setCaseId(caseRef);
+        report.setCaseRefId(caseRef);
         report.setSubmittedBy(submittedBy);
         report.setDepartment(reportRequestDTO.getDepartment());
         report.setContent(reportRequestDTO.getContent());
@@ -53,7 +53,7 @@ public class ReportService {
     }
 
     public List<ReportResponseDTO> getAllReportsByCaseId(UUID caseId) {
-        List<Report> reports = reportRepository.findByCaseRefId(caseId);
+        List<Report> reports = reportRepository.findByCaseRefIdId(caseId);
         return reports.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
@@ -81,7 +81,7 @@ public class ReportService {
     private ReportResponseDTO mapToResponseDTO(Report report) {
         return new ReportResponseDTO(
                 report.getId(),
-                report.getCaseId().getId(),
+                report.getCaseRefId().getId(),
                 report.getSubmittedBy().getId(),
                 report.getDepartment(),
                 report.getContent(),

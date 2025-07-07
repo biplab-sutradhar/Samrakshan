@@ -50,6 +50,7 @@ public class CaseService {
             caseDetail.setNotes(caseRequestDTO.getCaseDetails().getNotes());
             caseDetail.setEvidencePath(caseRequestDTO.getCaseDetails().getEvidencePath());
             caseDetailsRepository.save(caseDetail);
+            savedCase.getCaseDetails().add(caseDetail); // Add to the list to maintain relationship
         }
 
         return mapToResponseDTO(savedCase);

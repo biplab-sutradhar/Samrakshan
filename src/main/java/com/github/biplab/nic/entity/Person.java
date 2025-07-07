@@ -14,7 +14,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "person", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"email"}),
-        @UniqueConstraint(columnNames = {"phoneNumber"})
+        @UniqueConstraint(columnNames = {"phone_number"})
 })
 @Getter
 @Setter
@@ -36,9 +36,6 @@ public class Person {
 
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
-
-    @Column(name = "date_of_birth")
-    private LocalDateTime dateOfBirth;
 
     @Column(name = "gender")
     private String gender;

@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ReportRepository extends JpaRepository<Report, UUID> {
-    List<Report> findByCaseRefId(UUID caseId);
+    List<Report> findByCaseRefIdId(UUID caseRefId);
 }

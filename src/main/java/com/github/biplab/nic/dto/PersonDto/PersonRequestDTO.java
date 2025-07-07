@@ -9,8 +9,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,8 +26,6 @@ public class PersonRequestDTO {
 
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
-
-    private LocalDateTime dateOfBirth;
 
     private String gender;
 
