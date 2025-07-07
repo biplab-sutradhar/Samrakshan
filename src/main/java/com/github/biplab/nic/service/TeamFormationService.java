@@ -10,9 +10,8 @@ import com.github.biplab.nic.repository.TeamFormationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class TeamFormationService {
@@ -30,42 +29,39 @@ public class TeamFormationService {
         ChildMarriageCase caseRef = caseRepository.findById(teamFormationDTO.getCaseId())
                 .orElseThrow(() -> new RuntimeException("Case not found with ID: " + teamFormationDTO.getCaseId()));
 
-        List<Person> policeTeam = teamFormationDTO.getPoliceTeamIds().stream()
-                .map(id -> personRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Person not found with ID: " + id)))
-                .collect(Collectors.toList());
+        Person policePerson = personRepository.findById(teamFormationDTO.getPolicePersonId())
+                .orElseThrow(() -> new RuntimeException("Police person not found with ID: " + teamFormationDTO.getPolicePersonId()));
 
-        List<Person> administrativeTeam = teamFormationDTO.getAdministrativeTeamIds().stream()
-                .map(id -> personRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Person not found with ID: " + id)))
-                .collect(Collectors.toList());
+        Person dicePerson = personRepository.findById(teamFormationDTO.getDicePersonId())
+                .orElseThrow(() -> new RuntimeException("DICE person not found with ID: " + teamFormationDTO.getDicePersonId()));
 
-        List<Person> diceTeam = teamFormationDTO.getDiceTeamIds().stream()
-                .map(id -> personRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Person not found with ID: " + id)))
-                .collect(Collectors.toList());
-
-        Person teamLeader = personRepository.findById(teamFormationDTO.getTeamLeaderId())
-                .orElseThrow(() -> new RuntimeException("Team leader not found with ID: " + teamFormationDTO.getTeamLeaderId()));
+        Person adminPerson = personRepository.findById(teamFormationDTO.getAdminPersonId())
+                .orElseThrow(() -> new RuntimeException("Admin person not found with ID: " + teamFormationDTO.getAdminPersonId()));
 
         TeamFormation teamFormation = new TeamFormation();
-        teamFormation.setCaseRef(caseRef);
-        teamFormation.setPoliceTeam(policeTeam);
-        teamFormation.setAdministrativeTeam(administrativeTeam);
-        teamFormation.setDiceTeam(diceTeam);
-        teamFormation.setTeamLeader(teamLeader);
+        teamFormation.setCaseId(caseRef);
+        teamFormation.setPolicePerson(policePerson);
+        teamFormation.setDicePerson(dicePerson);
+        teamFormation.setAdminPerson(adminPerson);
+        teamFormation.setFormedAt(LocalDateTime.now());
 
         TeamFormation savedTeam = teamFormationRepository.save(teamFormation);
         return mapToDTO(savedTeam);
     }
 
+    public TeamFormationDTO getTeamFormationById(UUID id) {
+        TeamFormation teamFormation = teamFormationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Team formation not found with ID: " + id));
+        return mapToDTO(teamFormation);
+    }
+
     private TeamFormationDTO mapToDTO(TeamFormation teamFormation) {
         TeamFormationDTO dto = new TeamFormationDTO();
-        dto.setCaseId(teamFormation.getCaseRef().getId());
-        dto.setPoliceTeamIds(teamFormation.getPoliceTeam().stream().map(Person::getId).collect(Collectors.toList()));
-        dto.setAdministrativeTeamIds(teamFormation.getAdministrativeTeam().stream().map(Person::getId).collect(Collectors.toList()));
-        dto.setDiceTeamIds(teamFormation.getDiceTeam().stream().map(Person::getId).collect(Collectors.toList()));
-        dto.setTeamLeaderId(teamFormation.getTeamLeader().getId());
+        dto.setCaseId(teamFormation.getCaseId().getId());
+        dto.setPolicePersonId(teamFormation.getPolicePerson().getId());
+        dto.setDicePersonId(teamFormation.getDicePerson().getId());
+        dto.setAdminPersonId(teamFormation.getAdminPerson().getId());
+        dto.setFormedAt(teamFormation.getFormedAt().toString()); // Convert to String for now
         return dto;
     }
 }

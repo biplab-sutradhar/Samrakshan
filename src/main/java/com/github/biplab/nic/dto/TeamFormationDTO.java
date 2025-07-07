@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -17,15 +16,15 @@ public class TeamFormationDTO {
     @NotNull(message = "Case ID is required")
     private UUID caseId;
 
-    @NotNull(message = "Police team IDs are required")
-    private List<UUID> policeTeamIds;
+    @NotNull(message = "Police person ID is required")
+    private UUID policePersonId;
 
-    @NotNull(message = "Administrative team IDs are required")
-    private List<UUID> administrativeTeamIds;
+    @NotNull(message = "DICE person ID is required")
+    private UUID dicePersonId;
 
-    @NotNull(message = "DICE team IDs are required")
-    private List<UUID> diceTeamIds;
+    @NotNull(message = "Admin person ID is required")
+    private UUID adminPersonId;
 
-    @NotNull(message = "Team leader ID is required")
-    private UUID teamLeaderId;
+    @NotNull(message = "Formed at is required")
+    private String formedAt; // Placeholder; use LocalDateTime in practice
 }
