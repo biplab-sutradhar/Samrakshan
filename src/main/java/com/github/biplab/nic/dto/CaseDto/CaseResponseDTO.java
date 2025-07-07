@@ -24,5 +24,7 @@ public class CaseResponseDTO {
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<CaseDetailsDTO> caseDetails; // List of associated case details
+    private List<CaseDetailsDTO> caseDetails;
+    private String district;
+    private String state;
 }

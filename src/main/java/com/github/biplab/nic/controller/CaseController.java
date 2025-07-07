@@ -35,6 +35,17 @@ public class CaseController {
         return ResponseEntity.ok(caseService.getAllCases());
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<CaseResponseDTO> updateCase(@PathVariable UUID id, @RequestBody CaseRequestDTO caseRequestDTO) {
+        return ResponseEntity.ok(caseService.updateCase(id, caseRequestDTO));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCase(@PathVariable UUID id) {
+        caseService.deleteCase(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{caseId}/team")
     public ResponseEntity<TeamFormationDTO> formTeam(@PathVariable UUID caseId, @RequestBody TeamFormationDTO teamFormationDTO) {
         teamFormationDTO.setCaseId(caseId);

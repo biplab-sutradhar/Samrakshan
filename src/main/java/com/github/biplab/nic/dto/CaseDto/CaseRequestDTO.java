@@ -24,6 +24,12 @@ public class CaseRequestDTO {
     @NotBlank(message = "Case address is required")
     private String caseAddress;
 
+    @NotBlank(message = "District is required")
+    private String district;
+
+    @NotBlank(message = "State is required")
+    private String state;
+
     private String description;
 
     private LocalDateTime reportedAt;
@@ -33,5 +39,5 @@ public class CaseRequestDTO {
 
     private String status;
 
-    private CaseDetailsDTO caseDetails; // Optional field for initial case details
+    private CaseDetailsDTO caseDetails;
 }

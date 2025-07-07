@@ -24,4 +24,10 @@ public class TeamFormationController {
     public ResponseEntity<TeamFormationDTO> getTeamFormationById(@PathVariable UUID id) {
         return ResponseEntity.ok(teamFormationService.getTeamFormationById(id));
     }
+
+    @PutMapping("/{id}/response")
+    public ResponseEntity<Void> handleTeamResponse(@PathVariable UUID id, @RequestParam String department, @RequestParam String status) {
+        teamFormationService.handleResponse(id, department, status);
+        return ResponseEntity.ok().build();
+    }
 }

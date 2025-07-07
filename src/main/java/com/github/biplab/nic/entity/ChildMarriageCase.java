@@ -31,6 +31,12 @@ public class ChildMarriageCase {
     @Column(name = "case_address", nullable = false)
     private String caseAddress;
 
+    @Column(name = "district", nullable = false)
+    private String district;
+
+    @Column(name = "state", nullable = false)
+    private String state;
+
     @Column(name = "description")
     private String description;
 
@@ -51,7 +57,10 @@ public class ChildMarriageCase {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "caseId", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CaseDetails> caseDetails = new ArrayList<>(); // Initialize as empty list
+    private List<CaseDetails> caseDetails = new ArrayList<>();
+
+    @OneToOne(mappedBy = "caseId", cascade = CascadeType.ALL)
+    private TeamFormation teamFormation;
 
     @PrePersist
     protected void onCreate() {

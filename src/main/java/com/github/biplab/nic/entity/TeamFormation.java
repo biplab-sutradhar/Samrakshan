@@ -20,27 +20,52 @@ public class TeamFormation {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "case_id", nullable = false)
     private ChildMarriageCase caseId;
 
     @ManyToOne
-    @JoinColumn(name = "police_person", nullable = false)
+    @JoinColumn(name = "police_person_id", nullable = false)
     private Person policePerson;
 
     @ManyToOne
-    @JoinColumn(name = "dice_person", nullable = false)
+    @JoinColumn(name = "dice_person_id", nullable = false)
     private Person dicePerson;
 
     @ManyToOne
-    @JoinColumn(name = "admin_person", nullable = false)
+    @JoinColumn(name = "admin_person_id", nullable = false)
     private Person adminPerson;
 
     @Column(name = "formed_at")
     private LocalDateTime formedAt;
 
+    @Column(name = "police_status")
+    private String policeStatus; // e.g., "PENDING", "ACCEPTED", "REJECTED"
+
+    @Column(name = "dice_status")
+    private String diceStatus;
+
+    @Column(name = "admin_status")
+    private String adminStatus;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
-        formedAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (formedAt == null) formedAt = LocalDateTime.now();
+        if (policeStatus == null) policeStatus = "PENDING";
+        if (diceStatus == null) diceStatus = "PENDING";
+        if (adminStatus == null) adminStatus = "PENDING";
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
