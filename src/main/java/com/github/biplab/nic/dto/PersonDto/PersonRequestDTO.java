@@ -35,4 +35,7 @@ public class PersonRequestDTO {
     private Role role;
 
     private Department department;
+
+    @NotBlank(message = "Password is required")
+    private String password;
 }

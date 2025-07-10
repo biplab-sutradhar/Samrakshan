@@ -1,6 +1,5 @@
 package com.github.biplab.nic.entity;
 
-import com.github.biplab.nic.enums.Department;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,25 +17,19 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Report {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "case_id", nullable = false)
-    private ChildMarriageCase caseRefId;
+    @Column(name = "case_id")
+    private UUID caseId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "department", nullable = false)
-    private Department department;
+    @Column(name = "person_id")
+    private UUID personId; // Changed from Person to UUID
 
-    @ManyToOne
-    @JoinColumn(name = "submitted_by", nullable = false)
-    private Person submittedBy;
-
-    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "content", nullable = false)
     private String content;
 
-    @Column(name = "submitted_at")
+    @Column(name = "submitted_at", nullable = false)
     private LocalDateTime submittedAt;
 
     @PrePersist

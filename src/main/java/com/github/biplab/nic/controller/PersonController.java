@@ -31,4 +31,25 @@ public class PersonController {
     public ResponseEntity<List<PersonResponseDTO>> getAllPersons() {
         return ResponseEntity.ok(personService.getAllPersons());
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PersonResponseDTO> updatePerson(@PathVariable UUID id, @RequestBody PersonRequestDTO personRequestDTO) {
+        return ResponseEntity.ok(personService.updatePerson(id, personRequestDTO));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePerson(@PathVariable UUID id) {
+        personService.deletePerson(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestParam String email, @RequestParam String password) {
+        boolean isAuthenticated = personService.login(email, password);
+        if (isAuthenticated) {
+            return ResponseEntity.ok("Login successful");
+        } else {
+            return ResponseEntity.status(401).body("Invalid email or password");
+        }
+    }
 }

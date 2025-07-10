@@ -18,8 +18,13 @@ public class ReportRequestDTO {
     @NotNull(message = "Case ID is required")
     private UUID caseId;
 
+    @NotNull(message = "Person ID is required")
+    private UUID personId;
+
     @NotNull(message = "Submitted by ID is required")
     private UUID submittedBy;
+
+
 
     @NotNull(message = "Department is required")
     private Department department;

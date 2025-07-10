@@ -1,12 +1,8 @@
 package com.github.biplab.nic.service;
 
-import com.github.biplab.nic.dto.ReportDto.ReportRequestDTO;
 import com.github.biplab.nic.dto.ReportDto.ReportResponseDTO;
-import com.github.biplab.nic.entity.ChildMarriageCase;
-import com.github.biplab.nic.entity.Person;
+import com.github.biplab.nic.dto.ReportDto.ReportRequestDTO;
 import com.github.biplab.nic.entity.Report;
-import com.github.biplab.nic.repository.CaseRepository;
-import com.github.biplab.nic.repository.PersonRepository;
 import com.github.biplab.nic.repository.ReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,70 +16,62 @@ import java.util.stream.Collectors;
 public class ReportService {
 
     @Autowired
-    private ReportRepository reportRepository;
+    private ReportRepository reportRepository; // Ensure this is injected
 
-    @Autowired
-    private CaseRepository caseRepository;
-
-    @Autowired
-    private PersonRepository personRepository;
-
-    public ReportResponseDTO submitReport(ReportRequestDTO reportRequestDTO) {
-        ChildMarriageCase caseRef = caseRepository.findById(reportRequestDTO.getCaseId())
-                .orElseThrow(() -> new RuntimeException("Case not found with ID: " + reportRequestDTO.getCaseId()));
-
-        Person submittedBy = personRepository.findById(reportRequestDTO.getSubmittedBy())
-                .orElseThrow(() -> new RuntimeException("Person not found with ID: " + reportRequestDTO.getSubmittedBy()));
-
+    public ReportResponseDTO createReport(ReportRequestDTO reportRequestDTO) {
         Report report = new Report();
-        report.setCaseRefId(caseRef);
-        report.setSubmittedBy(submittedBy);
-        report.setDepartment(reportRequestDTO.getDepartment());
+        report.setCaseId(reportRequestDTO.getCaseId());
+        report.setPersonId(reportRequestDTO.getPersonId());
         report.setContent(reportRequestDTO.getContent());
         report.setSubmittedAt(LocalDateTime.now());
         Report savedReport = reportRepository.save(report);
-
         return mapToResponseDTO(savedReport);
     }
 
-    public ReportResponseDTO getReportById(UUID id) {
+    public ReportResponseDTO getReportById(Long id) {
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Report not found with ID: " + id));
         return mapToResponseDTO(report);
     }
 
-    public List<ReportResponseDTO> getAllReportsByCaseId(UUID caseId) {
-        List<Report> reports = reportRepository.findByCaseRefIdId(caseId);
-        return reports.stream()
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    public ReportResponseDTO updateReport(UUID id, ReportRequestDTO reportRequestDTO) {
+    public ReportResponseDTO updateReport(Long id, ReportRequestDTO reportRequestDTO) {
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Report not found with ID: " + id));
-
-        // Update only mutable fields
-        report.setDepartment(reportRequestDTO.getDepartment());
+        report.setCaseId(reportRequestDTO.getCaseId());
+        report.setPersonId(reportRequestDTO.getPersonId());
         report.setContent(reportRequestDTO.getContent());
-        report.setSubmittedAt(LocalDateTime.now()); // Update timestamp on modification
+        report.setSubmittedAt(LocalDateTime.now());
         Report updatedReport = reportRepository.save(report);
-
         return mapToResponseDTO(updatedReport);
     }
 
-    public void deleteReport(UUID id) {
+    public void deleteReport(Long id) {
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Report not found with ID: " + id));
         reportRepository.delete(report);
     }
 
+    public List<ReportResponseDTO> getReportsByCaseId(UUID caseId) {
+        List<Report> reports = reportRepository.findByCaseId(caseId)
+                .orElseThrow(() -> new RuntimeException("No reports found for case ID: " + caseId));
+        return reports.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ReportResponseDTO> getReportsByPersonId(UUID personId) {
+        List<Report> reports = reportRepository.findByPersonId(personId)
+                .orElseThrow(() -> new RuntimeException("No reports found for person ID: " + personId));
+        return reports.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     private ReportResponseDTO mapToResponseDTO(Report report) {
         return new ReportResponseDTO(
                 report.getId(),
-                report.getCaseRefId().getId(),
-                report.getSubmittedBy().getId(),
-                report.getDepartment(),
+                report.getCaseId(),
+                report.getPersonId(),
                 report.getContent(),
                 report.getSubmittedAt()
         );

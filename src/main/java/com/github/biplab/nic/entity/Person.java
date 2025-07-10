@@ -12,10 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "person", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"email"}),
-        @UniqueConstraint(columnNames = {"phone_number"})
-})
+@Table(name = "person")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,7 +28,7 @@ public class Person {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @Column(name = "phone_number", nullable = false)
@@ -44,18 +41,21 @@ public class Person {
     private String address;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private Role role;
+    @Column(name = "role")
+    private Role role; // Use Role enum
 
     @Enumerated(EnumType.STRING)
     @Column(name = "department")
-    private Department department;
+    private Department department; // Use Department enum
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "password", nullable = false)
+    private String password;
 
     @PrePersist
     protected void onCreate() {

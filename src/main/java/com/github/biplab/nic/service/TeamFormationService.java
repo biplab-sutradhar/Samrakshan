@@ -30,6 +30,7 @@ public class TeamFormationService {
     private PersonRepository personRepository;
 
     public TeamFormationDTO createTeamFormation(TeamFormationDTO teamFormationDTO) {
+        // Existing implementation
         ChildMarriageCase caseRef = caseRepository.findById(teamFormationDTO.getCaseId())
                 .orElseThrow(() -> new RuntimeException("Case not found with ID: " + teamFormationDTO.getCaseId()));
         Person policePerson = personRepository.findById(teamFormationDTO.getPolicePersonId())
@@ -52,16 +53,16 @@ public class TeamFormationService {
     }
 
     public TeamFormationDTO getTeamFormationById(UUID id) {
+        // Existing implementation
         TeamFormation teamFormation = teamFormationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Team formation not found with ID: " + id));
         return mapToDTO(teamFormation);
     }
 
     public void initiateTeamFormation(UUID caseId) {
+        // Existing implementation
         ChildMarriageCase caseEntity = caseRepository.findById(caseId)
                 .orElseThrow(() -> new RuntimeException("Case not found with ID: " + caseId));
-
-        // Select 2-3 persons per department
         List<Person> policeMembers = personRepository.findByDepartmentAndRole(Department.POLICE, null)
                 .stream().limit(2).collect(Collectors.toList());
         List<Person> diceMembers = personRepository.findByDepartmentAndRole(Department.DICE, null)
@@ -89,6 +90,7 @@ public class TeamFormationService {
     }
 
     public void handleResponse(UUID teamId, String department, String status) {
+        // Existing implementation
         TeamFormation teamFormation = teamFormationRepository.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("Team formation not found with ID: " + teamId));
         switch (department.toUpperCase()) {
@@ -104,17 +106,27 @@ public class TeamFormationService {
         }
     }
 
+    // New method
+    public TeamFormationDTO getTeamFormationByCaseId(UUID caseId) {
+        TeamFormation teamFormation = teamFormationRepository.findByCaseId_Id(caseId)
+                .orElseThrow(() -> new RuntimeException("Team formation not found for case ID: " + caseId));
+        return mapToDTO(teamFormation);
+    }
+
     private boolean isTeamReady(TeamFormation teamFormation) {
+        // Existing implementation
         return List.of(teamFormation.getPoliceStatus(), teamFormation.getDiceStatus(), teamFormation.getAdminStatus())
                 .stream().allMatch(status -> status.equals("ACCEPTED"));
     }
 
     private boolean hasRejections(TeamFormation teamFormation) {
+        // Existing implementation
         return List.of(teamFormation.getPoliceStatus(), teamFormation.getDiceStatus(), teamFormation.getAdminStatus())
                 .stream().anyMatch(status -> status.equals("REJECTED"));
     }
 
     private void handleTeamDecision(TeamFormation teamFormation) {
+        // Existing implementation
         if (isTeamReady(teamFormation)) {
             teamFormation.getCaseId().setStatus("IN_PROGRESS");
             caseRepository.save(teamFormation.getCaseId());
@@ -130,12 +142,13 @@ public class TeamFormationService {
     }
 
     private TeamFormationDTO mapToDTO(TeamFormation teamFormation) {
+        // Existing implementation
         TeamFormationDTO dto = new TeamFormationDTO();
         dto.setCaseId(teamFormation.getCaseId().getId());
         dto.setPolicePersonId(teamFormation.getPolicePerson().getId());
         dto.setDicePersonId(teamFormation.getDicePerson().getId());
         dto.setAdminPersonId(teamFormation.getAdminPerson().getId());
-        dto.setFormedAt(teamFormation.getFormedAt().toString());
+        dto.setFormedAt(LocalDateTime.parse(teamFormation.getFormedAt().toString()));
         dto.setPoliceStatus(teamFormation.getPoliceStatus());
         dto.setDiceStatus(teamFormation.getDiceStatus());
         dto.setAdminStatus(teamFormation.getAdminStatus());
