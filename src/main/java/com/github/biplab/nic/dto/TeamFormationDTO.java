@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -14,9 +15,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TeamFormationDTO {
     private UUID caseId;
-    private UUID policePersonId;
-    private UUID dicePersonId;
-    private UUID adminPersonId;
+    private UUID supervisorId;
+    private List<UUID> memberIds;
     private LocalDateTime formedAt;
     private String policeStatus;
     private String diceStatus;

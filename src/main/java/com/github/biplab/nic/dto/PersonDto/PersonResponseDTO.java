@@ -26,4 +26,9 @@ public class PersonResponseDTO {
     private Department department;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String district;
+    private String designation;
+    private String officeName;
+    private String status;
+    private String subdivision;
 }

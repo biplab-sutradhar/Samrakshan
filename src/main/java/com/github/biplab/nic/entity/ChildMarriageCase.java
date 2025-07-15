@@ -43,9 +43,8 @@ public class ChildMarriageCase {
     @Column(name = "reported_at")
     private LocalDateTime reportedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
-    private Person createdBy;
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
 
     @Column(name = "status")
     private String status;

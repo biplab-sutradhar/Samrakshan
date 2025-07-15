@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -20,27 +22,23 @@ public class TeamFormation {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "case_id", nullable = false)
     private ChildMarriageCase caseId;
 
     @ManyToOne
-    @JoinColumn(name = "police_person_id", nullable = false)
-    private Person policePerson;
+    @JoinColumn(name = "supervisor_id", nullable = false)
+    private Person supervisor;
 
-    @ManyToOne
-    @JoinColumn(name = "dice_person_id", nullable = false)
-    private Person dicePerson;
+    @ElementCollection
+    @Column(name = "member_ids")
+    private List<UUID> memberIds = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "admin_person_id", nullable = false)
-    private Person adminPerson;
-
-    @Column(name = "formed_at")
+    @Column(name = "formed_at", nullable = false)
     private LocalDateTime formedAt;
 
     @Column(name = "police_status")
-    private String policeStatus; // e.g., "PENDING", "ACCEPTED", "REJECTED"
+    private String policeStatus;
 
     @Column(name = "dice_status")
     private String diceStatus;
@@ -48,24 +46,8 @@ public class TeamFormation {
     @Column(name = "admin_status")
     private String adminStatus;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        if (formedAt == null) formedAt = LocalDateTime.now();
-        if (policeStatus == null) policeStatus = "PENDING";
-        if (diceStatus == null) diceStatus = "PENDING";
-        if (adminStatus == null) adminStatus = "PENDING";
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        formedAt = LocalDateTime.now();
     }
 }

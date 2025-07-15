@@ -32,12 +32,48 @@ public class PersonService {
         person.setPhoneNumber(personRequestDTO.getPhoneNumber());
         person.setGender(personRequestDTO.getGender());
         person.setAddress(personRequestDTO.getAddress());
-        person.setRole(Role.valueOf(personRequestDTO.getRole().toString())); // Convert String to Role enum
-        person.setDepartment(personRequestDTO.getDepartment() != null ? Department.valueOf(personRequestDTO.getDepartment().toString()) : null); // Convert String to Department enum
+        person.setRole(Role.valueOf(personRequestDTO.getRole().toString()));
+        person.setDepartment(personRequestDTO.getDepartment());
+
+        person.setDistrict(personRequestDTO.getDistrict());
+        person.setDesignation(personRequestDTO.getDesignation());
+        person.setOfficeName(personRequestDTO.getOfficeName());
+        person.setStatus(personRequestDTO.getStatus());
+        person.setSubdivision(personRequestDTO.getSubdivision());
+
         person.setPassword(passwordEncoder.encode(personRequestDTO.getPassword()));
         Person savedPerson = personRepository.save(person);
         return mapToResponseDTO(savedPerson);
     }
+
+
+    public List<PersonResponseDTO> createPersons(List<PersonRequestDTO> personRequestDTOList) {
+        List<Person> persons = personRequestDTOList.stream().map(dto -> {
+            Person person = new Person();
+            person.setFirstName(dto.getFirstName());
+            person.setLastName(dto.getLastName());
+            person.setEmail(dto.getEmail());
+            person.setPhoneNumber(dto.getPhoneNumber());
+            person.setGender(dto.getGender());
+            person.setAddress(dto.getAddress());
+            person.setRole(Role.valueOf(dto.getRole().toString()));
+            person.setDepartment(dto.getDepartment());
+
+            person.setDistrict(dto.getDistrict());
+            person.setDesignation(dto.getDesignation());
+            person.setOfficeName(dto.getOfficeName());
+            person.setStatus(dto.getStatus());
+            person.setSubdivision(dto.getSubdivision());
+
+            person.setPassword(passwordEncoder.encode(dto.getPassword()));
+            return person;
+        }).toList();
+
+        List<Person> savedPersons = personRepository.saveAll(persons);
+        return savedPersons.stream().map(this::mapToResponseDTO).toList();
+    }
+
+
 
     public PersonResponseDTO getPersonById(UUID id) {
         Person person = personRepository.findById(id)
@@ -50,6 +86,8 @@ public class PersonService {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+
 
     public PersonResponseDTO updatePerson(UUID id, PersonRequestDTO personRequestDTO) {
         Person person = personRepository.findById(id)

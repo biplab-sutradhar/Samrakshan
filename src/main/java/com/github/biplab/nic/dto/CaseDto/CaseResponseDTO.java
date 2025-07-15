@@ -18,13 +18,13 @@ public class CaseResponseDTO {
     private String complainantName;
     private String complainantPhone;
     private String caseAddress;
+    private String district;
+    private String state;
     private String description;
     private LocalDateTime reportedAt;
-    private UUID createdBy;
+    private String createdBy;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<CaseDetailsDTO> caseDetails;
-    private String district;
-    private String state;
 }

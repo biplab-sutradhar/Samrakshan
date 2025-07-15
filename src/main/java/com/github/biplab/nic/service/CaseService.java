@@ -37,9 +37,6 @@ public class CaseService {
     private TeamFormationService teamFormationService;
 
     public CaseResponseDTO submitCase(CaseRequestDTO caseRequestDTO) {
-        Person createdBy = personRepository.findById(caseRequestDTO.getCreatedBy())
-                .orElseThrow(() -> new RuntimeException("Person not found with ID: " + caseRequestDTO.getCreatedBy()));
-
         ChildMarriageCase caseEntity = new ChildMarriageCase();
         caseEntity.setComplainantName(caseRequestDTO.getComplainantName());
         caseEntity.setComplainantPhone(caseRequestDTO.getComplainantPhone());
@@ -47,9 +44,9 @@ public class CaseService {
         caseEntity.setDistrict(caseRequestDTO.getDistrict());
         caseEntity.setState(caseRequestDTO.getState());
         caseEntity.setDescription(caseRequestDTO.getDescription());
-        caseEntity.setReportedAt(caseRequestDTO.getReportedAt());
-        caseEntity.setCreatedBy(createdBy);
-        caseEntity.setStatus(caseRequestDTO.getStatus());
+        caseEntity.setReportedAt(caseRequestDTO.getReportedAt() != null ? caseRequestDTO.getReportedAt() : LocalDateTime.now());
+        caseEntity.setCreatedBy(caseRequestDTO.getCreatedBy());
+        caseEntity.setStatus("PENDING");
         ChildMarriageCase savedCase = caseRepository.save(caseEntity);
 
         if (caseRequestDTO.getCaseDetails() != null) {
@@ -57,11 +54,27 @@ public class CaseService {
             caseDetail.setCaseId(savedCase);
             caseDetail.setNotes(caseRequestDTO.getCaseDetails().getNotes());
             caseDetail.setEvidencePath(caseRequestDTO.getCaseDetails().getEvidencePath());
+            caseDetail.setMarriageDate(caseRequestDTO.getCaseDetails().getMarriageDate());
+            caseDetail.setBoyName(caseRequestDTO.getCaseDetails().getBoyName());
+            caseDetail.setBoyFatherName(caseRequestDTO.getCaseDetails().getBoyFatherName());
+            caseDetail.setBoyAddress(caseRequestDTO.getCaseDetails().getBoyAddress());
+            caseDetail.setBoyAge(caseRequestDTO.getCaseDetails().getBoyAge());
+            caseDetail.setGirlName(caseRequestDTO.getCaseDetails().getGirlName());
+            caseDetail.setGirlFatherName(caseRequestDTO.getCaseDetails().getGirlFatherName());
+            caseDetail.setGirlAge(caseRequestDTO.getCaseDetails().getGirlAge());
+            caseDetail.setGirlAddress(caseRequestDTO.getCaseDetails().getGirlAddress());
+            caseDetail.setGirlVillage(caseRequestDTO.getCaseDetails().getGirlVillage());
+            caseDetail.setGirlPoliceStation(caseRequestDTO.getCaseDetails().getGirlPoliceStation());
+            caseDetail.setGirlPostOffice(caseRequestDTO.getCaseDetails().getGirlPostOffice());
+            caseDetail.setGirlSubdivision(caseRequestDTO.getCaseDetails().getGirlSubdivision());
+            caseDetail.setGirlDistrict(caseRequestDTO.getCaseDetails().getGirlDistrict());
+            // teamId should be set by TeamFormationService, so omit here
+            caseDetail.setMarriageAddress(caseRequestDTO.getCaseDetails().getMarriageAddress());
             caseDetailsRepository.save(caseDetail);
             savedCase.getCaseDetails().add(caseDetail);
         }
 
-        teamFormationService.initiateTeamFormation(savedCase.getId());
+        teamFormationService.initiateTeamFormation(savedCase.getId(), caseEntity.getDistrict());
         return mapToResponseDTO(savedCase);
     }
 
@@ -80,17 +93,14 @@ public class CaseService {
     public CaseResponseDTO updateCase(UUID id, CaseRequestDTO caseRequestDTO) {
         ChildMarriageCase caseEntity = caseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Case not found with ID: " + id));
-        Person createdBy = personRepository.findById(caseRequestDTO.getCreatedBy())
-                .orElseThrow(() -> new RuntimeException("Person not found with ID: " + caseRequestDTO.getCreatedBy()));
-
         caseEntity.setComplainantName(caseRequestDTO.getComplainantName());
         caseEntity.setComplainantPhone(caseRequestDTO.getComplainantPhone());
         caseEntity.setCaseAddress(caseRequestDTO.getCaseAddress());
         caseEntity.setDistrict(caseRequestDTO.getDistrict());
         caseEntity.setState(caseRequestDTO.getState());
         caseEntity.setDescription(caseRequestDTO.getDescription());
-        caseEntity.setReportedAt(caseRequestDTO.getReportedAt());
-        caseEntity.setCreatedBy(createdBy);
+        caseEntity.setReportedAt(caseRequestDTO.getReportedAt() != null ? caseRequestDTO.getReportedAt() : caseEntity.getReportedAt());
+        caseEntity.setCreatedBy(caseRequestDTO.getCreatedBy());
         caseEntity.setStatus(caseRequestDTO.getStatus());
 
         if (caseRequestDTO.getCaseDetails() != null) {
@@ -99,6 +109,22 @@ public class CaseService {
             caseDetail.setCaseId(caseEntity);
             caseDetail.setNotes(caseRequestDTO.getCaseDetails().getNotes());
             caseDetail.setEvidencePath(caseRequestDTO.getCaseDetails().getEvidencePath());
+            caseDetail.setMarriageDate(caseRequestDTO.getCaseDetails().getMarriageDate());
+            caseDetail.setBoyName(caseRequestDTO.getCaseDetails().getBoyName());
+            caseDetail.setBoyFatherName(caseRequestDTO.getCaseDetails().getBoyFatherName());
+            caseDetail.setBoyAddress(caseRequestDTO.getCaseDetails().getBoyAddress());
+            caseDetail.setBoyAge(caseRequestDTO.getCaseDetails().getBoyAge());
+            caseDetail.setGirlName(caseRequestDTO.getCaseDetails().getGirlName());
+            caseDetail.setGirlFatherName(caseRequestDTO.getCaseDetails().getGirlFatherName());
+            caseDetail.setGirlAge(caseRequestDTO.getCaseDetails().getGirlAge());
+            caseDetail.setGirlAddress(caseRequestDTO.getCaseDetails().getGirlAddress());
+            caseDetail.setGirlVillage(caseRequestDTO.getCaseDetails().getGirlVillage());
+            caseDetail.setGirlPoliceStation(caseRequestDTO.getCaseDetails().getGirlPoliceStation());
+            caseDetail.setGirlPostOffice(caseRequestDTO.getCaseDetails().getGirlPostOffice());
+            caseDetail.setGirlSubdivision(caseRequestDTO.getCaseDetails().getGirlSubdivision());
+            caseDetail.setGirlDistrict(caseRequestDTO.getCaseDetails().getGirlDistrict());
+            // teamId should be set by TeamFormationService
+            caseDetail.setMarriageAddress(caseRequestDTO.getCaseDetails().getMarriageAddress());
             caseEntity.getCaseDetails().add(caseDetail);
             caseDetailsRepository.save(caseDetail);
         }
@@ -123,7 +149,7 @@ public class CaseService {
         dto.setState(caseEntity.getState());
         dto.setDescription(caseEntity.getDescription());
         dto.setReportedAt(caseEntity.getReportedAt());
-        dto.setCreatedBy(caseEntity.getCreatedBy() != null ? caseEntity.getCreatedBy().getId() : null);
+        dto.setCreatedBy(caseEntity.getCreatedBy());
         dto.setStatus(caseEntity.getStatus());
         dto.setCreatedAt(caseEntity.getCreatedAt());
         dto.setUpdatedAt(caseEntity.getUpdatedAt());
@@ -140,7 +166,27 @@ public class CaseService {
                 caseDetails.getNotes(),
                 caseDetails.getEvidencePath(),
                 caseDetails.getCreatedAt(),
-                caseDetails.getUpdatedAt()
+                caseDetails.getUpdatedAt(),
+                caseDetails.getPoliceMembers(),
+                caseDetails.getDiceMembers(),
+                caseDetails.getAdminMembers(),
+                caseDetails.getSupervisorId(),
+                caseDetails.getMarriageDate(),
+                caseDetails.getBoyName(),
+                caseDetails.getBoyFatherName(),
+                caseDetails.getBoyAddress(),
+                caseDetails.getBoyAge(),
+                caseDetails.getGirlName(),
+                caseDetails.getGirlFatherName(),
+                caseDetails.getGirlAge(),
+                caseDetails.getGirlAddress(),
+                caseDetails.getGirlVillage(),
+                caseDetails.getGirlPoliceStation(),
+                caseDetails.getGirlPostOffice(),
+                caseDetails.getGirlSubdivision(),
+                caseDetails.getGirlDistrict(),
+                caseDetails.getTeamId(),
+                caseDetails.getMarriageAddress()
         );
     }
 }

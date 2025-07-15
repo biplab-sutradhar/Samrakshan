@@ -34,19 +34,19 @@ public class Person {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    @Column(name = "gender")
+    @Column(name = "gender", nullable = false)
     private String gender;
 
-    @Column(name = "address")
+    @Column(name = "address", nullable = false)
     private String address;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
-    private Role role; // Use Role enum
+    private Role role;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "department")
-    private Department department; // Use Department enum
+    private Department department;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -56,6 +56,21 @@ public class Person {
 
     @Column(name = "password", nullable = false)
     private String password;
+
+    @Column(name = "district")
+    private String district;
+
+    @Column(name = "office_name")
+    private String officeName;
+
+    @Column(name = "subdivision")
+    private String subdivision;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "designation")
+    private String designation;
 
     @PrePersist
     protected void onCreate() {

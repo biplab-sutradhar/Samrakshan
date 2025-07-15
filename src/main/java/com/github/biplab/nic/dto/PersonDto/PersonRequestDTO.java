@@ -38,4 +38,10 @@ public class PersonRequestDTO {
 
     @NotBlank(message = "Password is required")
     private String password;
+
+    private String district;
+    private String designation;
+    private String officeName;
+    private String status;
+    private String subdivision;
 }

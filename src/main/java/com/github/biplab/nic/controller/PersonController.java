@@ -37,6 +37,12 @@ public class PersonController {
         return ResponseEntity.ok(personService.updatePerson(id, personRequestDTO));
     }
 
+    @PostMapping("/bulk")
+    public ResponseEntity<List<PersonResponseDTO>> createPersons(@RequestBody List<PersonRequestDTO> personRequestDTOList) {
+        return ResponseEntity.ok(personService.createPersons(personRequestDTOList));
+    }
+
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePerson(@PathVariable UUID id) {
         personService.deletePerson(id);

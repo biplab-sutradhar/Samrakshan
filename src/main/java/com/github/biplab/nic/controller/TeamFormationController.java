@@ -2,7 +2,7 @@ package com.github.biplab.nic.controller;
 
 import com.github.biplab.nic.dto.TeamFormationDTO;
 import com.github.biplab.nic.service.TeamFormationService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,30 +10,37 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/team-formations")
-@RequiredArgsConstructor
 public class TeamFormationController {
 
-    private final TeamFormationService teamFormationService;
-
-    @GetMapping("/{id}")
-    public ResponseEntity<TeamFormationDTO> getTeamFormationById(@PathVariable UUID id) {
-        return ResponseEntity.ok(teamFormationService.getTeamFormationById(id));
-    }
+    @Autowired
+    private TeamFormationService teamFormationService;
 
     @PostMapping
     public ResponseEntity<TeamFormationDTO> createTeamFormation(@RequestBody TeamFormationDTO teamFormationDTO) {
-        return ResponseEntity.ok(teamFormationService.createTeamFormation(teamFormationDTO));
+        TeamFormationDTO createdDTO = teamFormationService.createTeamFormation(teamFormationDTO);
+        return ResponseEntity.ok(createdDTO);
     }
 
-    @PutMapping("/{id}/response")
-    public ResponseEntity<Void> handleResponse(@PathVariable UUID id, @RequestParam String department, @RequestParam String status) {
-        teamFormationService.handleResponse(id, department, status);
+    @PostMapping("/initiate/{caseId}")
+    public ResponseEntity<Void> initiateTeamFormation(@PathVariable UUID caseId) {
+        // Assume district is fetched from case; adjust if needed
+        teamFormationService.initiateTeamFormation(caseId, "Delhi"); // Hardcoded for now; fetch dynamically
         return ResponseEntity.ok().build();
     }
 
-    // New endpoint
+    @PostMapping("/response/{teamId}")
+    public ResponseEntity<Void> handleResponse(
+            @PathVariable UUID teamId,
+            @RequestParam UUID personId,
+            @RequestParam String department,
+            @RequestParam String status) {
+        teamFormationService.handleResponse(teamId, personId, department, status);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/case/{caseId}")
     public ResponseEntity<TeamFormationDTO> getTeamFormationByCaseId(@PathVariable UUID caseId) {
-        return ResponseEntity.ok(teamFormationService.getTeamFormationByCaseId(caseId));
+        TeamFormationDTO dto = teamFormationService.getTeamFormationByCaseId(caseId);
+        return ResponseEntity.ok(dto);
     }
 }
