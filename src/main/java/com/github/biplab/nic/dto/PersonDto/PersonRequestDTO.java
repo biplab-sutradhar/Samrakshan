@@ -44,4 +44,6 @@ public class PersonRequestDTO {
     private String officeName;
     private String status;
     private String subdivision;
+    private Integer rank;
+
 }

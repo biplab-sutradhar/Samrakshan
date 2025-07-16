@@ -25,6 +25,7 @@ public class PersonService {
     private BCryptPasswordEncoder passwordEncoder;
 
     public PersonResponseDTO createPerson(PersonRequestDTO personRequestDTO) {
+
         Person person = new Person();
         person.setFirstName(personRequestDTO.getFirstName());
         person.setLastName(personRequestDTO.getLastName());
@@ -34,6 +35,7 @@ public class PersonService {
         person.setAddress(personRequestDTO.getAddress());
         person.setRole(Role.valueOf(personRequestDTO.getRole().toString()));
         person.setDepartment(personRequestDTO.getDepartment());
+        person.setRank(personRequestDTO.getRank());
 
         person.setDistrict(personRequestDTO.getDistrict());
         person.setDesignation(personRequestDTO.getDesignation());
@@ -56,9 +58,14 @@ public class PersonService {
             person.setPhoneNumber(dto.getPhoneNumber());
             person.setGender(dto.getGender());
             person.setAddress(dto.getAddress());
-            person.setRole(Role.valueOf(dto.getRole().toString()));
-            person.setDepartment(dto.getDepartment());
+            if (dto.getRole() != null) {
+                person.setRole(Role.valueOf(dto.getRole().toString()));
+            } else {
+                person.setRole(null);  // Allow role to be empty (null)
+            }
 
+            person.setDepartment(dto.getDepartment());
+            person.setRank(dto.getRank());
             person.setDistrict(dto.getDistrict());
             person.setDesignation(dto.getDesignation());
             person.setOfficeName(dto.getOfficeName());

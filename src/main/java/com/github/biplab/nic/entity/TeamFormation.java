@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,11 +17,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TeamFormation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @Column(name = "team_id", nullable = false, updatable = false)
+    private UUID teamId;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "case_id", nullable = false)
     private ChildMarriageCase caseId;
 
@@ -31,11 +32,15 @@ public class TeamFormation {
     private Person supervisor;
 
     @ElementCollection
-    @Column(name = "member_ids")
-    private List<UUID> memberIds = new ArrayList<>();
+    @CollectionTable(name = "team_formation_member_ids", joinColumns = @JoinColumn(name = "team_formation_team_id"))
+    @Column(name = "member_id", nullable = false)
+    private List<UUID> memberIds;
 
-    @Column(name = "formed_at", nullable = false)
+    @Column(name = "formed_at", nullable = true)
     private LocalDateTime formedAt;
+
+    @Column(name = "notification_sent_at")
+    private LocalDateTime notificationSentAt;
 
     @Column(name = "police_status")
     private String policeStatus;
@@ -46,8 +51,24 @@ public class TeamFormation {
     @Column(name = "admin_status")
     private String adminStatus;
 
+    @Column(name = "response_status") // You can choose a different column name if needed
+    private String response;
+
+
     @PrePersist
     protected void onCreate() {
-        formedAt = LocalDateTime.now();
+
+        if (this.formedAt == null) {
+            this.formedAt = LocalDateTime.now();
+        }
+    }
+
+    // Rename getId to getTeamId for consistency
+    public UUID getTeamId() {
+        return teamId;
+    }
+
+    public void setTeamId(UUID teamId) {
+        this.teamId = teamId;
     }
 }

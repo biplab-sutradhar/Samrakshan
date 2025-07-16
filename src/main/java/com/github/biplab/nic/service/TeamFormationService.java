@@ -5,18 +5,22 @@ import com.github.biplab.nic.entity.ChildMarriageCase;
 import com.github.biplab.nic.entity.CaseDetails;
 import com.github.biplab.nic.entity.Person;
 import com.github.biplab.nic.entity.TeamFormation;
+import com.github.biplab.nic.entity.TeamResponse;
 import com.github.biplab.nic.enums.Department;
 import com.github.biplab.nic.enums.Role;
 import com.github.biplab.nic.repository.CaseDetailsRepository;
 import com.github.biplab.nic.repository.CaseRepository;
 import com.github.biplab.nic.repository.PersonRepository;
 import com.github.biplab.nic.repository.TeamFormationRepository;
+import com.github.biplab.nic.repository.TeamResponseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,37 +39,222 @@ public class TeamFormationService {
     @Autowired
     private CaseDetailsRepository caseDetailsRepository;
 
-    public TeamFormationDTO createTeamFormation(TeamFormationDTO teamFormationDTO) {
-        ChildMarriageCase caseRef = caseRepository.findById(teamFormationDTO.getCaseId())
-                .orElseThrow(() -> new RuntimeException("Case not found with ID: " + teamFormationDTO.getCaseId()));
-        Person supervisor = personRepository.findById(teamFormationDTO.getSupervisorId())
-                .orElseThrow(() -> new RuntimeException("Supervisor not found with ID: " + teamFormationDTO.getSupervisorId()));
-        if (!supervisor.getRole().equals(Role.SUPERVISOR)) {
-            throw new RuntimeException("Selected supervisor must have SUPERVISOR role");
+    @Autowired
+    private TeamResponseRepository teamResponseRepository;
+
+    private static final int MAX_TEAM_SIZE = 8; // Maximum team size including supervisor
+    private static final long ACCEPTANCE_TIMEOUT_HOURS = 24;
+
+    public void initiateTeamFormation(UUID caseId, String district) {
+        ChildMarriageCase caseEntity = caseRepository.findById(caseId)
+                .orElseThrow(() -> new RuntimeException("Case not found with ID: " + caseId));
+
+        // Select any available supervisor
+        List<Person> supervisors = personRepository.findByRoleAndDistrict(Role.SUPERVISOR, district);
+        if (supervisors.isEmpty()) {
+            throw new RuntimeException("No supervisor available in district: " + district);
+        }
+        Person supervisor = supervisors.get(0);
+
+        // Select up to 2 members per department, limiting total to 8 including supervisor
+        List<Person> policeMembers = personRepository.findByDepartmentAndDistrictAndRoleAndRank(Department.POLICE, district, Role.MEMBER, 2)
+                .stream().limit(2).collect(Collectors.toList());
+        List<Person> diceMembers = personRepository.findByDepartmentAndDistrictAndRoleAndRank(Department.DICE, district, Role.MEMBER, 2)
+                .stream().limit(2).collect(Collectors.toList());
+        List<Person> adminMembers = personRepository.findByDepartmentAndDistrictAndRoleAndRank(Department.ADMINISTRATION, district, Role.MEMBER, 2)
+                .stream().limit(2).collect(Collectors.toList());
+
+        // Total members (6) + supervisor (1) = 7, within MAX_TEAM_SIZE (8)
+        List<UUID> allMemberIds = new ArrayList<>();
+        allMemberIds.addAll(policeMembers.stream().map(Person::getId).collect(Collectors.toList()));
+        allMemberIds.addAll(diceMembers.stream().map(Person::getId).collect(Collectors.toList()));
+        allMemberIds.addAll(adminMembers.stream().map(Person::getId).collect(Collectors.toList()));
+
+        // Create pending TeamFormation
+        TeamFormation teamFormation = new TeamFormation();
+        teamFormation.setCaseId(caseEntity);
+        teamFormation.setSupervisor(supervisor);
+        teamFormation.setMemberIds(allMemberIds);
+        teamFormation.setNotificationSentAt(LocalDateTime.now());
+        teamFormation.setPoliceStatus("PENDING");
+        teamFormation.setDiceStatus("PENDING");
+        teamFormation.setAdminStatus("PENDING");
+        TeamFormation savedTeam = teamFormationRepository.save(teamFormation);
+        caseEntity.setTeamFormation(savedTeam);
+        caseRepository.save(caseEntity);
+
+        System.out.println("TeamFormation initiated for case " + caseId + " with supervisor " + supervisor.getId() + " and members " + allMemberIds);
+
+        // Update CaseDetails with pending state
+        CaseDetails caseDetails = caseEntity.getCaseDetails().isEmpty() ? new CaseDetails() : caseEntity.getCaseDetails().get(0);
+        caseDetails.setCaseId(caseEntity);
+        caseDetails.setSupervisorId(supervisor.getId());
+        caseDetails.setTeamId(savedTeam.getTeamId());
+        caseDetailsRepository.save(caseDetails);
+        if (caseEntity.getCaseDetails().isEmpty()) {
+            caseEntity.getCaseDetails().add(caseDetails);
+        }
+        caseRepository.save(caseEntity);
+
+        // Send notifications
+        sendNotifications(savedTeam.getTeamId(), supervisor.getId(), allMemberIds);
+    }
+
+    private void sendNotifications(UUID teamId, UUID supervisorId, List<UUID> memberIds) {
+        List<UUID> allIds = new ArrayList<>();
+        allIds.add(supervisorId);
+        allIds.addAll(memberIds);
+        if (allIds.size() >= MAX_TEAM_SIZE) {
+            System.out.println("Team for " + teamId + " is already formed with " + allIds.size() + " members. No more members can be added.");
+            return; // Prevent further additions
         }
 
-        TeamFormation teamFormation = new TeamFormation();
-        teamFormation.setCaseId(caseRef);
-        teamFormation.setSupervisor(supervisor);
-        teamFormation.setMemberIds(teamFormationDTO.getMemberIds());
-        teamFormation.setFormedAt(LocalDateTime.now());
-        TeamFormation savedTeam = teamFormationRepository.save(teamFormation);
-        caseRef.setTeamFormation(savedTeam);
-        caseRepository.save(caseRef);
+        for (UUID personId : allIds) {
+            TeamResponse response = new TeamResponse();
+            response.setTeamId(teamId);
+            response.setPersonId(personId);
+            response.setResponse("PENDING");
+            teamResponseRepository.save(response);
+        }
+        System.out.println("Notifications sent for team " + teamId + " to: " + allIds);
 
-        // Update CaseDetails with teamId
-        CaseDetails caseDetails = caseRef.getCaseDetails().isEmpty() ? new CaseDetails() : caseRef.getCaseDetails().get(0);
-        caseDetails.setCaseId(caseRef);
-        caseDetails.setPoliceMembers(new ArrayList<>());
-        caseDetails.setDiceMembers(new ArrayList<>());
-        caseDetails.setAdminMembers(new ArrayList<>());
-        caseDetails.setSupervisorId(supervisor.getId());
-        caseDetails.setTeamId(savedTeam.getId()); // Set teamId
+        // Simulate member rejection or acceptance
+        Random random = new Random();
+        for (UUID personId : allIds) {
+            String initialResponse = random.nextBoolean() ? "REJECTED" : "PENDING";
+            if ("REJECTED".equals(initialResponse)) {
+                handleResponse(teamId, personId, getDepartmentForPerson(personId, memberIds), "REJECTED");
+                System.out.println("Member " + personId + " rejected case for team " + teamId);
+            }
+        }
+
+        // Sequential acceptance after 1-second initial delay
+        int delay = 1000;
+        for (UUID personId : allIds) {
+            TeamResponse response = teamResponseRepository.findByTeamIdAndPersonId(teamId, personId)
+                    .orElseThrow(() -> new RuntimeException("Response not found for person ID: " + personId));
+            if ("PENDING".equals(response.getResponse())) {
+                int finalDelay = delay;
+                new java.util.Timer().schedule(new java.util.TimerTask() {
+                    @Override
+                    public void run() {
+                        handleResponse(teamId, personId, getDepartmentForPerson(personId, memberIds), "ACCEPTED");
+                        System.out.println("Member " + personId + " accepted case for team " + teamId + " after " + (finalDelay / 1000) + " seconds");
+                    }
+                }, delay);
+                delay += 1000;
+            }
+        }
+    }
+
+    private String getDepartmentForPerson(UUID personId, List<UUID> memberIds) {
+        int index = memberIds.indexOf(personId);
+        if (index < 2) return "POLICE";
+        else if (index < 4) return "DICE";
+        else return "ADMINISTRATION";
+    }
+
+    @Scheduled(fixedRate = 60000) // Check every minute
+    public void checkAcceptanceStatus() {
+        List<TeamFormation> pendingTeams = teamFormationRepository.findByFormedAtIsNull();
+        for (TeamFormation team : pendingTeams) {
+            LocalDateTime timeout = team.getNotificationSentAt().plusHours(ACCEPTANCE_TIMEOUT_HOURS);
+            if (LocalDateTime.now().isAfter(timeout)) {
+                handleDepartmentalEscalation(team); // Use departmental escalation
+            } else if (isTeamFullyAccepted(team)) {
+                confirmTeamFormation(team);
+            }
+        }
+    }
+
+    private boolean isTeamFullyAccepted(TeamFormation team) {
+        List<TeamResponse> responses = teamResponseRepository.findByTeamId(team.getTeamId());
+        return responses.stream().allMatch(r -> "ACCEPTED".equals(r.getResponse()));
+    }
+
+    private void confirmTeamFormation(TeamFormation team) {
+        team.setFormedAt(LocalDateTime.now());
+        TeamFormation savedTeam = teamFormationRepository.save(team);
+
+        ChildMarriageCase caseEntity = team.getCaseId();
+        CaseDetails caseDetails = caseEntity.getCaseDetails().get(0);
+        List<UUID> memberIds = team.getMemberIds();
+        caseDetails.setPoliceMembers(memberIds.subList(0, 2));
+        caseDetails.setDiceMembers(memberIds.subList(2, 4));
+        caseDetails.setAdminMembers(memberIds.subList(4, 6));
         caseDetailsRepository.save(caseDetails);
-        caseRef.getCaseDetails().clear();
-        caseRef.getCaseDetails().add(caseDetails);
+        caseEntity.setStatus("IN_PROGRESS");
+        caseRepository.save(caseEntity);
 
-        return mapToDTO(savedTeam);
+        System.out.println("TeamFormation confirmed for case " + team.getCaseId().getId() + " with members assigned: " +
+                caseDetails.getPoliceMembers() + ", " + caseDetails.getDiceMembers() + ", " + caseDetails.getAdminMembers());
+    }
+
+    private void handleDepartmentalEscalation(TeamFormation team) {
+        ChildMarriageCase caseEntity = team.getCaseId();
+        CaseDetails caseDetails = caseEntity.getCaseDetails().get(0);
+        String district = caseEntity.getDistrict();
+
+        // Check each department for unresponsiveness
+        if ("PENDING".equals(team.getPoliceStatus())) {
+            escalateDepartment(team, Department.POLICE, district);
+        }
+        if ("PENDING".equals(team.getDiceStatus())) {
+            escalateDepartment(team, Department.DICE, district);
+        }
+        if ("PENDING".equals(team.getAdminStatus())) {
+            escalateDepartment(team, Department.ADMINISTRATION, district);
+        }
+    }
+
+    private void escalateDepartment(TeamFormation team, Department department, String district) {
+        List<Person> higherRankMembers = personRepository.findByDepartmentAndDistrictAndRoleAndRank(department, district, Role.SUPERVISOR, 1);
+        Person assignedPerson = higherRankMembers.isEmpty() ? null : higherRankMembers.get(0);
+
+        if (assignedPerson == null) {
+            System.out.println("No rank 1 supervisor found in " + department + " department for district " + district);
+            return;
+        }
+
+        // Update case details with escalation note
+        CaseDetails caseDetails = team.getCaseId().getCaseDetails().get(0);
+        caseDetails.setNotes(caseDetails.getNotes() + "\nEscalated to " + assignedPerson.getId() + " in " + department + " department");
+        caseDetailsRepository.save(caseDetails);
+        System.out.println("Case " + team.getCaseId().getId() + " escalated to " + assignedPerson.getId() + " in " + department + " department");
+    }
+
+    public void handleResponse(UUID teamId, UUID personId, String department, String status) {
+        TeamFormation teamFormation = teamFormationRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("Team formation not found with ID: " + teamId));
+        TeamResponse response = teamResponseRepository.findByTeamIdAndPersonId(teamId, personId)
+                .orElseThrow(() -> new RuntimeException("Response not found for person ID: " + personId));
+        response.setResponse(status.toUpperCase());
+        response.setRespondedAt(LocalDateTime.now());
+        teamResponseRepository.save(response);
+
+        switch (department.toUpperCase()) {
+            case "POLICE" -> teamFormation.setPoliceStatus(status.toUpperCase());
+            case "DICE" -> teamFormation.setDiceStatus(status.toUpperCase());
+            case "ADMINISTRATION" -> teamFormation.setAdminStatus(status.toUpperCase());
+            default -> throw new RuntimeException("Invalid department");
+        }
+        teamFormationRepository.save(teamFormation);
+
+        System.out.println("Response received for team " + teamId + ": " + personId + " in " + department + " - " + status);
+        if (isTeamFullyAccepted(teamFormation)) {
+            confirmTeamFormation(teamFormation);
+        } else if (hasRejections(teamFormation)) {
+            handleDepartmentalEscalation(teamFormation); // Immediate escalation on rejection
+        }
+    }
+
+    private boolean hasRejections(TeamFormation team) {
+        return "REJECTED".equals(team.getPoliceStatus()) || "REJECTED".equals(team.getDiceStatus()) || "REJECTED".equals(team.getAdminStatus());
+    }
+
+    @Deprecated
+    public TeamFormationDTO createTeamFormation(TeamFormationDTO teamFormationDTO) {
+        throw new UnsupportedOperationException("Manual team creation is deprecated. Use initiateTeamFormation instead.");
     }
 
     public TeamFormationDTO getTeamFormationById(UUID id) {
@@ -74,159 +263,20 @@ public class TeamFormationService {
         return mapToDTO(teamFormation);
     }
 
-    public void initiateTeamFormation(UUID caseId, String district) {
-        ChildMarriageCase caseEntity = caseRepository.findById(caseId)
-                .orElseThrow(() -> new RuntimeException("Case not found with ID: " + caseId));
-
-        // Select supervisor
-        List<Person> supervisors = personRepository.findByRoleAndDistrict(Role.SUPERVISOR, district);
-        if (supervisors.isEmpty()) {
-            throw new RuntimeException("No supervisor available in district: " + district);
-        }
-        Person supervisor = supervisors.get(0); // Take the first available supervisor
-
-        // Select members (2 from each department)
-        List<Person> policeMembers = personRepository.findByDepartmentAndDistrictAndRole(Department.POLICE, district, Role.MEMBER)
-                .stream().limit(2).collect(Collectors.toList());
-        List<Person> diceMembers = personRepository.findByDepartmentAndDistrictAndRole(Department.DICE, district, Role.MEMBER)
-                .stream().limit(2).collect(Collectors.toList());
-        List<Person> adminMembers = personRepository.findByDepartmentAndDistrictAndRole(Department.ADMINISTRATION, district, Role.MEMBER)
-                .stream().limit(2).collect(Collectors.toList());
-
-        // Ensure at least 6 members (2 per department)
-        if (policeMembers.size() < 2 || diceMembers.size() < 2 || adminMembers.size() < 2) {
-            throw new RuntimeException("Insufficient members available in district: " + district);
-        }
-
-        // Create TeamFormation
-        TeamFormation teamFormation = new TeamFormation();
-        teamFormation.setCaseId(caseEntity);
-        teamFormation.setSupervisor(supervisor);
-        List<UUID> allMemberIds = new ArrayList<>();
-        allMemberIds.addAll(policeMembers.stream().map(Person::getId).collect(Collectors.toList()));
-        allMemberIds.addAll(diceMembers.stream().map(Person::getId).collect(Collectors.toList()));
-        allMemberIds.addAll(adminMembers.stream().map(Person::getId).collect(Collectors.toList()));
-        teamFormation.setMemberIds(allMemberIds);
-        teamFormation.setFormedAt(LocalDateTime.now());
-        TeamFormation savedTeam = teamFormationRepository.save(teamFormation);
-        caseEntity.setTeamFormation(savedTeam);
-        caseRepository.save(caseEntity);
-
-        // Update CaseDetails with members
-        CaseDetails caseDetails = caseEntity.getCaseDetails().isEmpty() ? new CaseDetails() : caseEntity.getCaseDetails().get(0);
-        caseDetails.setCaseId(caseEntity);
-        caseDetails.setPoliceMembers(policeMembers.stream().map(Person::getId).collect(Collectors.toList()));
-        caseDetails.setDiceMembers(diceMembers.stream().map(Person::getId).collect(Collectors.toList()));
-        caseDetails.setAdminMembers(adminMembers.stream().map(Person::getId).collect(Collectors.toList()));
-        caseDetails.setSupervisorId(supervisor.getId());
-        caseDetails.setTeamId(savedTeam.getId());
-        caseDetailsRepository.save(caseDetails);
-        if (caseEntity.getCaseDetails().isEmpty()) {
-            caseEntity.getCaseDetails().add(caseDetails);
-        }
-        caseRepository.save(caseEntity);
-    }
-
-    public void handleResponse(UUID teamId, UUID personId, String department, String status) {
-        TeamFormation teamFormation = teamFormationRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team formation not found with ID: " + teamId));
-        ChildMarriageCase caseEntity = teamFormation.getCaseId();
-        CaseDetails caseDetails = caseEntity.getCaseDetails().get(0);
-
-        switch (department.toUpperCase()) {
-            case "POLICE" -> {
-                teamFormation.setPoliceStatus(status);
-                if ("ACCEPTED".equals(status)) {
-                    caseDetails.getPoliceMembers().add(personId);
-                } else if ("REJECTED".equals(status)) {
-                    replaceMember(teamId, Department.POLICE, personId);
-                }
-            }
-            case "DICE" -> {
-                teamFormation.setDiceStatus(status);
-                if ("ACCEPTED".equals(status)) {
-                    caseDetails.getDiceMembers().add(personId);
-                } else if ("REJECTED".equals(status)) {
-                    replaceMember(teamId, Department.DICE, personId);
-                }
-            }
-            case "ADMINISTRATION" -> {
-                teamFormation.setAdminStatus(status);
-                if ("ACCEPTED".equals(status)) {
-                    caseDetails.getAdminMembers().add(personId);
-                } else if ("REJECTED".equals(status)) {
-                    replaceMember(teamId, Department.ADMINISTRATION, personId);
-                }
-            }
-            default -> throw new RuntimeException("Invalid department");
-        }
-
-        caseDetailsRepository.save(caseDetails);
-        teamFormationRepository.save(teamFormation);
-
-        if (isTeamReady(teamFormation) || hasRejections(teamFormation)) {
-            handleTeamDecision(teamFormation);
-        }
-    }
-
-    private void replaceMember(UUID teamId, Department department, UUID rejectedPersonId) {
-        TeamFormation teamFormation = teamFormationRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team formation not found with ID: " + teamId));
-        ChildMarriageCase caseEntity = teamFormation.getCaseId();
-        CaseDetails caseDetails = caseEntity.getCaseDetails().get(0);
-        List<Person> availableMembers = personRepository.findByDepartmentAndDistrictAndRole(department, caseEntity.getDistrict(), Role.MEMBER)
-                .stream().filter(p -> !teamFormation.getMemberIds().contains(p.getId()) && !p.getId().equals(rejectedPersonId))
-                .collect(Collectors.toList());
-
-        if (!availableMembers.isEmpty()) {
-            Person replacement = availableMembers.get(0);
-            teamFormation.getMemberIds().remove(rejectedPersonId);
-            teamFormation.getMemberIds().add(replacement.getId());
-            teamFormationRepository.save(teamFormation);
-            // Notify replacement (placeholder)
-            System.out.println("Notified replacement: " + replacement.getId());
-        } else {
-            escalateCase(teamId);
-        }
-    }
-
-    private void escalateCase(UUID teamId) {
-        TeamFormation teamFormation = teamFormationRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team formation not found with ID: " + teamId));
-        System.out.println("Escalating case " + teamFormation.getCaseId().getId() + " to district/state authorities");
-        // Implement escalation logic (e.g., notify admin)
-    }
-
     public TeamFormationDTO getTeamFormationByCaseId(UUID caseId) {
         TeamFormation teamFormation = teamFormationRepository.findByCaseId_Id(caseId)
                 .orElseThrow(() -> new RuntimeException("Team formation not found for case ID: " + caseId));
         return mapToDTO(teamFormation);
     }
 
-    private boolean isTeamReady(TeamFormation teamFormation) {
-        return List.of(teamFormation.getPoliceStatus(), teamFormation.getDiceStatus(), teamFormation.getAdminStatus())
-                .stream().allMatch(status -> status.equals("ACCEPTED"));
-    }
-
-    private boolean hasRejections(TeamFormation teamFormation) {
-        return List.of(teamFormation.getPoliceStatus(), teamFormation.getDiceStatus(), teamFormation.getAdminStatus())
-                .stream().anyMatch(status -> status.equals("REJECTED"));
-    }
-
-    private void handleTeamDecision(TeamFormation teamFormation) {
-        if (isTeamReady(teamFormation)) {
-            teamFormation.getCaseId().setStatus("IN_PROGRESS");
-            caseRepository.save(teamFormation.getCaseId());
-        } else if (hasRejections(teamFormation)) {
-            escalateCase(teamFormation.getId());
-        }
-    }
-
     private TeamFormationDTO mapToDTO(TeamFormation teamFormation) {
         TeamFormationDTO dto = new TeamFormationDTO();
         dto.setCaseId(teamFormation.getCaseId().getId());
         dto.setSupervisorId(teamFormation.getSupervisor().getId());
-        dto.setMemberIds(teamFormation.getMemberIds());
+        List<UUID> memberIds = teamFormation.getMemberIds();
+        dto.setPoliceMembers(memberIds.subList(0, 2));
+        dto.setDiceMembers(memberIds.subList(2, 4));
+        dto.setAdminMembers(memberIds.subList(4, 6));
         dto.setFormedAt(teamFormation.getFormedAt());
         dto.setPoliceStatus(teamFormation.getPoliceStatus());
         dto.setDiceStatus(teamFormation.getDiceStatus());

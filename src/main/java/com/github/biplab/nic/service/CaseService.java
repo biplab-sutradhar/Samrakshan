@@ -46,7 +46,7 @@ public class CaseService {
         caseEntity.setDescription(caseRequestDTO.getDescription());
         caseEntity.setReportedAt(caseRequestDTO.getReportedAt() != null ? caseRequestDTO.getReportedAt() : LocalDateTime.now());
         caseEntity.setCreatedBy(caseRequestDTO.getCreatedBy());
-        caseEntity.setStatus("PENDING");
+        caseEntity.setStatus("PENDING"); // Pending until team is formed
         ChildMarriageCase savedCase = caseRepository.save(caseEntity);
 
         if (caseRequestDTO.getCaseDetails() != null) {
@@ -68,12 +68,12 @@ public class CaseService {
             caseDetail.setGirlPostOffice(caseRequestDTO.getCaseDetails().getGirlPostOffice());
             caseDetail.setGirlSubdivision(caseRequestDTO.getCaseDetails().getGirlSubdivision());
             caseDetail.setGirlDistrict(caseRequestDTO.getCaseDetails().getGirlDistrict());
-            // teamId should be set by TeamFormationService, so omit here
             caseDetail.setMarriageAddress(caseRequestDTO.getCaseDetails().getMarriageAddress());
             caseDetailsRepository.save(caseDetail);
             savedCase.getCaseDetails().add(caseDetail);
         }
 
+        // Initiate team formation (will be confirmed after acceptance)
         teamFormationService.initiateTeamFormation(savedCase.getId(), caseEntity.getDistrict());
         return mapToResponseDTO(savedCase);
     }
@@ -123,7 +123,6 @@ public class CaseService {
             caseDetail.setGirlPostOffice(caseRequestDTO.getCaseDetails().getGirlPostOffice());
             caseDetail.setGirlSubdivision(caseRequestDTO.getCaseDetails().getGirlSubdivision());
             caseDetail.setGirlDistrict(caseRequestDTO.getCaseDetails().getGirlDistrict());
-            // teamId should be set by TeamFormationService
             caseDetail.setMarriageAddress(caseRequestDTO.getCaseDetails().getMarriageAddress());
             caseEntity.getCaseDetails().add(caseDetail);
             caseDetailsRepository.save(caseDetail);

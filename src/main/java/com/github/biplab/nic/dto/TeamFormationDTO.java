@@ -16,7 +16,9 @@ import java.util.UUID;
 public class TeamFormationDTO {
     private UUID caseId;
     private UUID supervisorId;
-    private List<UUID> memberIds;
+    private List<UUID> policeMembers;
+    private List<UUID> diceMembers;
+    private List<UUID> adminMembers;
     private LocalDateTime formedAt;
     private String policeStatus;
     private String diceStatus;

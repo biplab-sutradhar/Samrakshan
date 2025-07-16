@@ -24,6 +24,7 @@ public class PersonResponseDTO {
     private String address;
     private Role role;
     private Department department;
+    private Integer rank;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String district;

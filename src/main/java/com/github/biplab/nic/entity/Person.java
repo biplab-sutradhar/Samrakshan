@@ -28,6 +28,9 @@ public class Person {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
+    @Column(name = "rank")
+    private Integer rank;
+
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
@@ -41,7 +44,7 @@ public class Person {
     private String address;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role")
+    @Column(name = "role", nullable = true)
     private Role role;
 
     @Enumerated(EnumType.STRING)

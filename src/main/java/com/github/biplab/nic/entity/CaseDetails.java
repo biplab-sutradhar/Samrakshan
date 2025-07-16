@@ -26,7 +26,7 @@ public class CaseDetails {
     @JoinColumn(name = "case_id", nullable = false)
     private ChildMarriageCase caseId;
 
-    @Column(name = "notes")
+    @Column(name = "notes", length = 10000)
     private String notes;
 
     @Column(name = "evidence_path")
