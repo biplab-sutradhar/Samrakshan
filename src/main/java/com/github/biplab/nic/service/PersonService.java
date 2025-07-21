@@ -81,7 +81,6 @@ public class PersonService {
     }
 
 
-
     public PersonResponseDTO getPersonById(UUID id) {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Person not found with ID: " + id));
@@ -139,6 +138,12 @@ public class PersonService {
         dto.setDepartment(person.getDepartment()); // Directly set Department enum
         dto.setCreatedAt(person.getCreatedAt());
         dto.setUpdatedAt(person.getUpdatedAt());
+        dto.setDistrict(person.getDistrict());
+        dto.setDesignation(person.getDesignation());
+        dto.setOfficeName(person.getOfficeName());
+        dto.setStatus(person.getStatus());
+        dto.setSubdivision(person.getSubdivision());
+        dto.setRank(person.getRank());
         return dto;
     }
 }
