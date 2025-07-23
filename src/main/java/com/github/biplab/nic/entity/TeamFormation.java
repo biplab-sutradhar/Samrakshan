@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "team_formation")
@@ -20,10 +19,9 @@ public class TeamFormation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "team_id", nullable = false, updatable = false)
     private UUID teamId;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "case_id", nullable = false)
     private ChildMarriageCase caseId;
 
@@ -32,43 +30,35 @@ public class TeamFormation {
     private Person supervisor;
 
     @ElementCollection
-    @CollectionTable(name = "team_formation_member_ids", joinColumns = @JoinColumn(name = "team_formation_team_id"))
-    @Column(name = "member_id", nullable = false)
-    private List<UUID> memberIds;
-
-    @Column(name = "formed_at", nullable = true)
-    private LocalDateTime formedAt;
+    @Column(name = "member_ids")
+    private List<UUID> memberIds = new ArrayList<>();  // Flat list of all member IDs for compatibility
 
     @Column(name = "notification_sent_at")
     private LocalDateTime notificationSentAt;
 
-    @Column(name = "police_status")
-    private String policeStatus;
+    @Column(name = "formed_at")
+    private LocalDateTime formedAt;
 
-    @Column(name = "dice_status")
-    private String diceStatus;
+    // Dynamic department statuses (department name -> status like "PENDING", "ACCEPTED", "REJECTED", "NO_MEMBERS")
+    @ElementCollection
+    @CollectionTable(name = "team_formation_department_statuses", joinColumns = @JoinColumn(name = "team_formation_id"))
+    @MapKeyColumn(name = "department")
+    @Column(name = "status")
+    private Map<String, String> departmentStatuses = new HashMap<>();
 
-    @Column(name = "admin_status")
-    private String adminStatus;
-
-    @Column(name = "response_status") // You can choose a different column name if needed
-    private String response;
-
+    // Dynamic department members (department name -> list of member UUIDs)
+    @ElementCollection
+    @CollectionTable(name = "team_formation_department_members", joinColumns = @JoinColumn(name = "team_formation_id"))
+    @MapKeyColumn(name = "department")
+    private Map<String, List<UUID>> departmentMembers = new HashMap<>();
 
     @PrePersist
     protected void onCreate() {
-
-        if (this.formedAt == null) {
-            this.formedAt = LocalDateTime.now();
-        }
+        notificationSentAt = LocalDateTime.now();
     }
 
-    // Rename getId to getTeamId for consistency
-    public UUID getTeamId() {
-        return teamId;
-    }
-
-    public void setTeamId(UUID teamId) {
-        this.teamId = teamId;
+    @PreUpdate
+    protected void onUpdate() {
+        // No specific update logic needed, but can add if required
     }
 }

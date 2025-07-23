@@ -22,8 +22,8 @@ public class PersonResponseDTO {
     private String phoneNumber;
     private String gender;
     private String address;
-    private Role role;
-    private Department department;
+    private String role;
+    private String department;
     private Integer rank;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -32,4 +32,5 @@ public class PersonResponseDTO {
     private String officeName;
     private String status;
     private String subdivision;
+    private String postName;
 }

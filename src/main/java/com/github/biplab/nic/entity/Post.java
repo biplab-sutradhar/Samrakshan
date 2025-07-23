@@ -25,7 +25,7 @@ public class Post {
     @Column(name = "rank", nullable = false)
     private Integer rank;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "department", nullable = false)
-    private Department department;
+    @Column(name = "department")
+    private String department;
+
 }

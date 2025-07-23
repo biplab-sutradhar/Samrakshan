@@ -15,27 +15,10 @@ public class TeamFormationController {
     @Autowired
     private TeamFormationService teamFormationService;
 
-    @PostMapping
-    public ResponseEntity<TeamFormationDTO> createTeamFormation(@RequestBody TeamFormationDTO teamFormationDTO) {
-        TeamFormationDTO createdDTO = teamFormationService.createTeamFormation(teamFormationDTO);
-        return ResponseEntity.ok(createdDTO);
-    }
-
-    @PostMapping("/initiate/{caseId}")
-    public ResponseEntity<Void> initiateTeamFormation(@PathVariable UUID caseId) {
-        // Assume district is fetched from case; adjust if needed
-        teamFormationService.initiateTeamFormation(caseId, "Delhi"); // Hardcoded for now; fetch dynamically
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/response/{teamId}")
-    public ResponseEntity<Void> handleResponse(
-            @PathVariable UUID teamId,
-            @RequestParam UUID personId,
-            @RequestParam String department,
-            @RequestParam String status) {
-        teamFormationService.handleResponse(teamId, personId, department, status);
-        return ResponseEntity.ok().build();
+    @GetMapping("/{id}")
+    public ResponseEntity<TeamFormationDTO> getTeamFormationById(@PathVariable UUID id) {
+        TeamFormationDTO dto = teamFormationService.getTeamFormationById(id);
+        return ResponseEntity.ok(dto);  // Now returns dynamic maps
     }
 
     @GetMapping("/case/{caseId}")

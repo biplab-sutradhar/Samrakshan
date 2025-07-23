@@ -4,10 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -16,11 +14,8 @@ import java.util.UUID;
 public class TeamFormationDTO {
     private UUID caseId;
     private UUID supervisorId;
-    private List<UUID> policeMembers;
-    private List<UUID> diceMembers;
-    private List<UUID> adminMembers;
+    private Map<String, List<UUID>> departmentMembers;  // New: dynamic map
     private LocalDateTime formedAt;
-    private String policeStatus;
-    private String diceStatus;
-    private String adminStatus;
+    private Map<String, String> departmentStatuses;  // New: dynamic statuses
+    // Remove fixed fields like policeMembers, policeStatus, etc.
 }

@@ -18,32 +18,33 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChildMarriageCase {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "complainant_name", nullable = false)
+    @Column(name = "complainant_name")
     private String complainantName;
 
-    @Column(name = "complainant_phone", nullable = false)
+    @Column(name = "complainant_phone")
     private String complainantPhone;
 
-    @Column(name = "case_address", nullable = false)
+    @Column(name = "case_address")  // Added
     private String caseAddress;
 
-    @Column(name = "district", nullable = false)
+    @Column(name = "district")  // Added
     private String district;
 
-    @Column(name = "state", nullable = false)
+    @Column(name = "state")  // Added
     private String state;
 
-    @Column(name = "description")
+    @Column(name = "description")  // Added
     private String description;
 
     @Column(name = "reported_at")
     private LocalDateTime reportedAt;
 
-    @Column(name = "created_by", nullable = false)
+    @Column(name = "created_by")
     private String createdBy;
 
     @Column(name = "status")
@@ -58,14 +59,19 @@ public class ChildMarriageCase {
     @OneToMany(mappedBy = "caseId", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CaseDetails> caseDetails = new ArrayList<>();
 
-    @OneToOne(mappedBy = "caseId", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "caseId")
     private TeamFormation teamFormation;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (reportedAt == null) reportedAt = LocalDateTime.now();
+        if (reportedAt == null) {
+            reportedAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = "PENDING";
+        }
     }
 
     @PreUpdate

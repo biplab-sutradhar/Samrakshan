@@ -2,15 +2,17 @@ package com.github.biplab.nic.service;
 
 import com.github.biplab.nic.dto.PersonDto.PersonRequestDTO;
 import com.github.biplab.nic.dto.PersonDto.PersonResponseDTO;
+import com.github.biplab.nic.entity.Departments;
 import com.github.biplab.nic.entity.Person;
-import com.github.biplab.nic.enums.Department;
-import com.github.biplab.nic.enums.Role; // Added import
+import com.github.biplab.nic.entity.Post;
+import com.github.biplab.nic.enums.Role;
+import com.github.biplab.nic.repository.DepartmentRepository;
 import com.github.biplab.nic.repository.PersonRepository;
+import com.github.biplab.nic.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,10 +24,15 @@ public class PersonService {
     private PersonRepository personRepository;
 
     @Autowired
+    private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     public PersonResponseDTO createPerson(PersonRequestDTO personRequestDTO) {
-
         Person person = new Person();
         person.setFirstName(personRequestDTO.getFirstName());
         person.setLastName(personRequestDTO.getLastName());
@@ -33,12 +40,21 @@ public class PersonService {
         person.setPhoneNumber(personRequestDTO.getPhoneNumber());
         person.setGender(personRequestDTO.getGender());
         person.setAddress(personRequestDTO.getAddress());
-        person.setRole(Role.valueOf(personRequestDTO.getRole().toString()));
-        person.setDepartment(personRequestDTO.getDepartment());
-        person.setRank(personRequestDTO.getRank());
+        person.setRole(Role.valueOf(personRequestDTO.getRole()));
+
+        // Validate department existence (optional, but recommended)
+        departmentRepository.findByName(personRequestDTO.getDepartment())
+                .orElseThrow(() -> new RuntimeException("Department not found: " + personRequestDTO.getDepartment()));
+        person.setDepartment(personRequestDTO.getDepartment());  // Set string directly
+
+        // Lookup post for rank (assuming Post has rank)
+        Post post = postRepository.findByPostNameAndDepartment(personRequestDTO.getDesignation(), personRequestDTO.getDepartment())
+                .orElseThrow(() -> new RuntimeException("Post not found for designation: " + personRequestDTO.getDesignation() + " in department: " + personRequestDTO.getDepartment()));
+        person.setDesignation(personRequestDTO.getDesignation());
+        person.setRank(post.getRank());
+        person.setPostName(post.getPostName());
 
         person.setDistrict(personRequestDTO.getDistrict());
-        person.setDesignation(personRequestDTO.getDesignation());
         person.setOfficeName(personRequestDTO.getOfficeName());
         person.setStatus(personRequestDTO.getStatus());
         person.setSubdivision(personRequestDTO.getSubdivision());
@@ -47,7 +63,6 @@ public class PersonService {
         Person savedPerson = personRepository.save(person);
         return mapToResponseDTO(savedPerson);
     }
-
 
     public List<PersonResponseDTO> createPersons(List<PersonRequestDTO> personRequestDTOList) {
         List<Person> persons = personRequestDTOList.stream().map(dto -> {
@@ -59,15 +74,24 @@ public class PersonService {
             person.setGender(dto.getGender());
             person.setAddress(dto.getAddress());
             if (dto.getRole() != null) {
-                person.setRole(Role.valueOf(dto.getRole().toString()));
+                person.setRole(Role.valueOf(dto.getRole()));
             } else {
-                person.setRole(null);  // Allow role to be empty (null)
+                person.setRole(null);
             }
 
+            // Validate department
+            departmentRepository.findByName(dto.getDepartment())
+                    .orElseThrow(() -> new RuntimeException("Department not found: " + dto.getDepartment()));
             person.setDepartment(dto.getDepartment());
-            person.setRank(dto.getRank());
-            person.setDistrict(dto.getDistrict());
+
+            // Lookup post
+            Post post = postRepository.findByPostNameAndDepartment(dto.getDesignation(), dto.getDepartment())
+                    .orElseThrow(() -> new RuntimeException("Post not found for designation: " + dto.getDesignation() + " in department: " + dto.getDepartment()));
             person.setDesignation(dto.getDesignation());
+            person.setRank(post.getRank());
+            person.setPostName(post.getPostName());
+
+            person.setDistrict(dto.getDistrict());
             person.setOfficeName(dto.getOfficeName());
             person.setStatus(dto.getStatus());
             person.setSubdivision(dto.getSubdivision());
@@ -79,7 +103,6 @@ public class PersonService {
         List<Person> savedPersons = personRepository.saveAll(persons);
         return savedPersons.stream().map(this::mapToResponseDTO).toList();
     }
-
 
     public PersonResponseDTO getPersonById(UUID id) {
         Person person = personRepository.findById(id)
@@ -93,8 +116,6 @@ public class PersonService {
                 .collect(Collectors.toList());
     }
 
-
-
     public PersonResponseDTO updatePerson(UUID id, PersonRequestDTO personRequestDTO) {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Person not found with ID: " + id));
@@ -104,11 +125,30 @@ public class PersonService {
         person.setPhoneNumber(personRequestDTO.getPhoneNumber());
         person.setGender(personRequestDTO.getGender());
         person.setAddress(personRequestDTO.getAddress());
-        person.setRole(Role.valueOf(personRequestDTO.getRole().toString()));
-        person.setDepartment(personRequestDTO.getDepartment() != null ? Department.valueOf(personRequestDTO.getDepartment().toString()) : null);
+        person.setRole(Role.valueOf(personRequestDTO.getRole()));
+
+        if (personRequestDTO.getDepartment() != null) {
+            departmentRepository.findByName(personRequestDTO.getDepartment())
+                    .orElseThrow(() -> new RuntimeException("Department not found: " + personRequestDTO.getDepartment()));
+            person.setDepartment(personRequestDTO.getDepartment());
+        }
+
+        if (personRequestDTO.getDesignation() != null) {
+            String deptName = personRequestDTO.getDepartment() != null ? personRequestDTO.getDepartment() : person.getDepartment();
+            if (deptName == null) {
+                throw new RuntimeException("Department required for designation update");
+            }
+            Post post = postRepository.findByPostNameAndDepartment(personRequestDTO.getDesignation(), deptName)
+                    .orElseThrow(() -> new RuntimeException("Post not found"));
+            person.setDesignation(personRequestDTO.getDesignation());
+            person.setRank(post.getRank());
+            person.setPostName(post.getPostName());
+        }
+
         if (personRequestDTO.getPassword() != null && !personRequestDTO.getPassword().isEmpty()) {
             person.setPassword(passwordEncoder.encode(personRequestDTO.getPassword()));
         }
+
         Person updatedPerson = personRepository.save(person);
         return mapToResponseDTO(updatedPerson);
     }
@@ -134,8 +174,8 @@ public class PersonService {
         dto.setPhoneNumber(person.getPhoneNumber());
         dto.setGender(person.getGender());
         dto.setAddress(person.getAddress());
-        dto.setRole(person.getRole()); // Directly set Role enum
-        dto.setDepartment(person.getDepartment()); // Directly set Department enum
+        dto.setRole(person.getRole() != null ? person.getRole().toString() : null);
+        dto.setDepartment(person.getDepartment());
         dto.setCreatedAt(person.getCreatedAt());
         dto.setUpdatedAt(person.getUpdatedAt());
         dto.setDistrict(person.getDistrict());
@@ -144,6 +184,7 @@ public class PersonService {
         dto.setStatus(person.getStatus());
         dto.setSubdivision(person.getSubdivision());
         dto.setRank(person.getRank());
+        dto.setPostName(person.getPostName());
         return dto;
     }
 }

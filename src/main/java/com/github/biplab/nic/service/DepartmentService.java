@@ -39,5 +39,8 @@ public class DepartmentService {
             return true;
         }).orElse(false);
     }
-}
 
+    public Optional<Departments> getDepartmentByName(String name) {
+        return departmentRepository.findByName(name);
+    }
+}

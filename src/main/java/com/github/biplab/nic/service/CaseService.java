@@ -5,11 +5,8 @@ import com.github.biplab.nic.dto.CaseDto.CaseResponseDTO;
 import com.github.biplab.nic.dto.CaseDto.CaseDetailsDTO;
 import com.github.biplab.nic.entity.ChildMarriageCase;
 import com.github.biplab.nic.entity.CaseDetails;
-import com.github.biplab.nic.entity.Person;
 import com.github.biplab.nic.repository.CaseRepository;
 import com.github.biplab.nic.repository.CaseDetailsRepository;
-import com.github.biplab.nic.repository.PersonRepository;
-import com.github.biplab.nic.repository.TeamFormationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,13 +22,7 @@ public class CaseService {
     private CaseRepository caseRepository;
 
     @Autowired
-    private PersonRepository personRepository;
-
-    @Autowired
     private CaseDetailsRepository caseDetailsRepository;
-
-    @Autowired
-    private TeamFormationRepository teamFormationRepository;
 
     @Autowired
     private TeamFormationService teamFormationService;
@@ -47,34 +38,37 @@ public class CaseService {
         caseEntity.setReportedAt(caseRequestDTO.getReportedAt() != null ? caseRequestDTO.getReportedAt() : LocalDateTime.now());
         caseEntity.setCreatedBy(caseRequestDTO.getCreatedBy());
         caseEntity.setStatus("PENDING"); // Pending until team is formed
+
         ChildMarriageCase savedCase = caseRepository.save(caseEntity);
+
+        String subdivision = null;  // Will be set from caseDetails if available
 
         if (caseRequestDTO.getCaseDetails() != null) {
             CaseDetails caseDetail = new CaseDetails();
             caseDetail.setCaseId(savedCase);
-            caseDetail.setNotes(caseRequestDTO.getCaseDetails().getNotes());
             caseDetail.setEvidencePath(caseRequestDTO.getCaseDetails().getEvidencePath());
             caseDetail.setMarriageDate(caseRequestDTO.getCaseDetails().getMarriageDate());
             caseDetail.setBoyName(caseRequestDTO.getCaseDetails().getBoyName());
             caseDetail.setBoyFatherName(caseRequestDTO.getCaseDetails().getBoyFatherName());
-            caseDetail.setBoyAddress(caseRequestDTO.getCaseDetails().getBoyAddress());
-            caseDetail.setBoyAge(caseRequestDTO.getCaseDetails().getBoyAge());
             caseDetail.setGirlName(caseRequestDTO.getCaseDetails().getGirlName());
             caseDetail.setGirlFatherName(caseRequestDTO.getCaseDetails().getGirlFatherName());
-            caseDetail.setGirlAge(caseRequestDTO.getCaseDetails().getGirlAge());
             caseDetail.setGirlAddress(caseRequestDTO.getCaseDetails().getGirlAddress());
-            caseDetail.setGirlVillage(caseRequestDTO.getCaseDetails().getGirlVillage());
-            caseDetail.setGirlPoliceStation(caseRequestDTO.getCaseDetails().getGirlPoliceStation());
-            caseDetail.setGirlPostOffice(caseRequestDTO.getCaseDetails().getGirlPostOffice());
             caseDetail.setGirlSubdivision(caseRequestDTO.getCaseDetails().getGirlSubdivision());
-            caseDetail.setGirlDistrict(caseRequestDTO.getCaseDetails().getGirlDistrict());
             caseDetail.setMarriageAddress(caseRequestDTO.getCaseDetails().getMarriageAddress());
+            caseDetail.setPoliceStationNearMarriageLocation(caseRequestDTO.getCaseDetails().getPoliceStationNearMarriageLocation());
             caseDetailsRepository.save(caseDetail);
             savedCase.getCaseDetails().add(caseDetail);
+
+            subdivision = caseDetail.getGirlSubdivision();  // Use girlSubdivision for team search
         }
 
-        // Initiate team formation (will be confirmed after acceptance)
-        teamFormationService.initiateTeamFormation(savedCase.getId(), caseEntity.getDistrict());
+        if (subdivision == null) {
+            subdivision = "Default Subdivision";  // Fallback if not provided
+        }
+
+        // Initiate team formation using subdivision for search (not district)
+        teamFormationService.initiateTeamFormation(savedCase.getId(), caseEntity.getDistrict(), subdivision);
+
         return mapToResponseDTO(savedCase);
     }
 
@@ -107,23 +101,16 @@ public class CaseService {
             caseEntity.getCaseDetails().clear();
             CaseDetails caseDetail = new CaseDetails();
             caseDetail.setCaseId(caseEntity);
-            caseDetail.setNotes(caseRequestDTO.getCaseDetails().getNotes());
             caseDetail.setEvidencePath(caseRequestDTO.getCaseDetails().getEvidencePath());
             caseDetail.setMarriageDate(caseRequestDTO.getCaseDetails().getMarriageDate());
             caseDetail.setBoyName(caseRequestDTO.getCaseDetails().getBoyName());
             caseDetail.setBoyFatherName(caseRequestDTO.getCaseDetails().getBoyFatherName());
-            caseDetail.setBoyAddress(caseRequestDTO.getCaseDetails().getBoyAddress());
-            caseDetail.setBoyAge(caseRequestDTO.getCaseDetails().getBoyAge());
             caseDetail.setGirlName(caseRequestDTO.getCaseDetails().getGirlName());
             caseDetail.setGirlFatherName(caseRequestDTO.getCaseDetails().getGirlFatherName());
-            caseDetail.setGirlAge(caseRequestDTO.getCaseDetails().getGirlAge());
             caseDetail.setGirlAddress(caseRequestDTO.getCaseDetails().getGirlAddress());
-            caseDetail.setGirlVillage(caseRequestDTO.getCaseDetails().getGirlVillage());
-            caseDetail.setGirlPoliceStation(caseRequestDTO.getCaseDetails().getGirlPoliceStation());
-            caseDetail.setGirlPostOffice(caseRequestDTO.getCaseDetails().getGirlPostOffice());
             caseDetail.setGirlSubdivision(caseRequestDTO.getCaseDetails().getGirlSubdivision());
-            caseDetail.setGirlDistrict(caseRequestDTO.getCaseDetails().getGirlDistrict());
             caseDetail.setMarriageAddress(caseRequestDTO.getCaseDetails().getMarriageAddress());
+            caseDetail.setPoliceStationNearMarriageLocation(caseRequestDTO.getCaseDetails().getPoliceStationNearMarriageLocation());
             caseEntity.getCaseDetails().add(caseDetail);
             caseDetailsRepository.save(caseDetail);
         }
@@ -162,30 +149,21 @@ public class CaseService {
         return new CaseDetailsDTO(
                 caseDetails.getId(),
                 caseDetails.getCaseId().getId(),
-                caseDetails.getNotes(),
                 caseDetails.getEvidencePath(),
                 caseDetails.getCreatedAt(),
                 caseDetails.getUpdatedAt(),
-                caseDetails.getPoliceMembers(),
-                caseDetails.getDiceMembers(),
-                caseDetails.getAdminMembers(),
+                caseDetails.getDepartmentMembers(),
                 caseDetails.getSupervisorId(),
                 caseDetails.getMarriageDate(),
                 caseDetails.getBoyName(),
                 caseDetails.getBoyFatherName(),
-                caseDetails.getBoyAddress(),
-                caseDetails.getBoyAge(),
                 caseDetails.getGirlName(),
                 caseDetails.getGirlFatherName(),
-                caseDetails.getGirlAge(),
                 caseDetails.getGirlAddress(),
-                caseDetails.getGirlVillage(),
-                caseDetails.getGirlPoliceStation(),
-                caseDetails.getGirlPostOffice(),
                 caseDetails.getGirlSubdivision(),
-                caseDetails.getGirlDistrict(),
                 caseDetails.getTeamId(),
-                caseDetails.getMarriageAddress()
+                caseDetails.getMarriageAddress(),
+                caseDetails.getPoliceStationNearMarriageLocation()
         );
     }
 }

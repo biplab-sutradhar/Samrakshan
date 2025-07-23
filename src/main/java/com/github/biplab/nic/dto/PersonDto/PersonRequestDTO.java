@@ -32,9 +32,10 @@ public class PersonRequestDTO {
     private String address;
 
     @NotBlank(message = "Role is required")
-    private Role role;
+    private String role; // Enum as String
 
-    private Department department;
+    private String department;
+
 
     @NotBlank(message = "Password is required")
     private String password;
@@ -45,5 +46,6 @@ public class PersonRequestDTO {
     private String status;
     private String subdivision;
     private Integer rank;
+    private String postName;
 
 }

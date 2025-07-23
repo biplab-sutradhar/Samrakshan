@@ -28,6 +28,9 @@ public class Person {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
+    @Column(name = "department")
+    private String department;
+
     @Column(name = "rank")
     private Integer rank;
 
@@ -47,9 +50,7 @@ public class Person {
     @Column(name = "role", nullable = true)
     private Role role;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "department")
-    private Department department;
+
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -74,6 +75,11 @@ public class Person {
 
     @Column(name = "designation")
     private String designation;
+
+    @Column(name = "post_name")
+    private String postName;
+
+
 
     @PrePersist
     protected void onCreate() {
