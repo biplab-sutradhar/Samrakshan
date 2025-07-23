@@ -35,5 +35,9 @@ public class CaseController {
         return ResponseEntity.ok(cases);
     }
 
-
+    @PutMapping("/{id}")
+    public ResponseEntity<CaseResponseDTO> updateCase(@PathVariable UUID id, @RequestBody CaseRequestDTO caseRequestDTO) {
+        CaseResponseDTO response = caseService.updateCase(id, caseRequestDTO);
+        return ResponseEntity.ok(response);
+    }
 }
