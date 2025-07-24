@@ -18,4 +18,8 @@ public class ReportResponseDTO {
     private UUID personId;
     private String content;
     private LocalDateTime submittedAt;
+    private String department;
+    private String finalContent;
+    private Boolean isMerged;
+
 }

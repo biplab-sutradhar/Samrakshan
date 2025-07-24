@@ -32,6 +32,14 @@ public class Report {
     @Column(name = "submitted_at", nullable = false)
     private LocalDateTime submittedAt;
 
+    private String department; // New: For uniqueness constraint
+
+    @Column(name = "final_content")
+    private String finalContent; // New: JSON string for merged report
+
+    @Column(name = "is_merged")
+    private Boolean isMerged = false;
+
     @PrePersist
     protected void onCreate() {
         submittedAt = LocalDateTime.now();

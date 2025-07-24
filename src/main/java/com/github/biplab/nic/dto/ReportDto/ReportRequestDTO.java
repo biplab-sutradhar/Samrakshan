@@ -27,8 +27,11 @@ public class ReportRequestDTO {
 
 
     @NotNull(message = "Department is required")
-    private Department department;
+    private String department;
 
     @NotBlank(message = "Content is required")
     private String content;
+
+    private String finalContent;
+    private Boolean isMerged;
 }
