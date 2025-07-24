@@ -12,14 +12,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CaseRequestDTO {
-    private String complainantName;
     private String complainantPhone;
-    private String caseAddress;
-    private String district;
-    private String state;
-    private String description;
     private LocalDateTime reportedAt;
-    private String createdBy;
     private String status;
     private CaseDetailsDTO caseDetails;
 }

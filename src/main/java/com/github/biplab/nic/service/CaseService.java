@@ -29,24 +29,21 @@ public class CaseService {
 
     public CaseResponseDTO submitCase(CaseRequestDTO caseRequestDTO) {
         ChildMarriageCase caseEntity = new ChildMarriageCase();
-        caseEntity.setComplainantName(caseRequestDTO.getComplainantName());
+
         caseEntity.setComplainantPhone(caseRequestDTO.getComplainantPhone());
-        caseEntity.setCaseAddress(caseRequestDTO.getCaseAddress());
-        caseEntity.setDistrict(caseRequestDTO.getDistrict());
-        caseEntity.setState(caseRequestDTO.getState());
-        caseEntity.setDescription(caseRequestDTO.getDescription());
+
         caseEntity.setReportedAt(caseRequestDTO.getReportedAt() != null ? caseRequestDTO.getReportedAt() : LocalDateTime.now());
-        caseEntity.setCreatedBy(caseRequestDTO.getCreatedBy());
+
         caseEntity.setStatus("PENDING"); // Pending until team is formed
 
         ChildMarriageCase savedCase = caseRepository.save(caseEntity);
 
-        String subdivision = null;  // Will be set from caseDetails if available
+        String subdivision = null;  // Extract from caseDetails if provided
 
         if (caseRequestDTO.getCaseDetails() != null) {
             CaseDetails caseDetail = new CaseDetails();
             caseDetail.setCaseId(savedCase);
-            caseDetail.setEvidencePath(caseRequestDTO.getCaseDetails().getEvidencePath());
+
             caseDetail.setMarriageDate(caseRequestDTO.getCaseDetails().getMarriageDate());
             caseDetail.setBoyName(caseRequestDTO.getCaseDetails().getBoyName());
             caseDetail.setBoyFatherName(caseRequestDTO.getCaseDetails().getBoyFatherName());
@@ -59,15 +56,15 @@ public class CaseService {
             caseDetailsRepository.save(caseDetail);
             savedCase.getCaseDetails().add(caseDetail);
 
-            subdivision = caseDetail.getGirlSubdivision();  // Use girlSubdivision for team search
+            subdivision = caseRequestDTO.getCaseDetails().getGirlSubdivision();  // Use for team search
         }
 
         if (subdivision == null) {
-            subdivision = "Default Subdivision";  // Fallback if not provided
+            subdivision = "Default Subdivision";  // Fallback
         }
 
-        // Initiate team formation using subdivision for search (not district)
-        teamFormationService.initiateTeamFormation(savedCase.getId(), caseEntity.getDistrict(), subdivision);
+        // Initiate team formation using subdivision for person search
+        teamFormationService.initiateTeamFormation(savedCase.getId(), subdivision);
 
         return mapToResponseDTO(savedCase);
     }
@@ -87,21 +84,16 @@ public class CaseService {
     public CaseResponseDTO updateCase(UUID id, CaseRequestDTO caseRequestDTO) {
         ChildMarriageCase caseEntity = caseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Case not found with ID: " + id));
-        caseEntity.setComplainantName(caseRequestDTO.getComplainantName());
-        caseEntity.setComplainantPhone(caseRequestDTO.getComplainantPhone());
-        caseEntity.setCaseAddress(caseRequestDTO.getCaseAddress());
-        caseEntity.setDistrict(caseRequestDTO.getDistrict());
-        caseEntity.setState(caseRequestDTO.getState());
-        caseEntity.setDescription(caseRequestDTO.getDescription());
-        caseEntity.setReportedAt(caseRequestDTO.getReportedAt() != null ? caseRequestDTO.getReportedAt() : caseEntity.getReportedAt());
-        caseEntity.setCreatedBy(caseRequestDTO.getCreatedBy());
+          caseEntity.setComplainantPhone(caseRequestDTO.getComplainantPhone());
+         caseEntity.setReportedAt(caseRequestDTO.getReportedAt() != null ? caseRequestDTO.getReportedAt() : caseEntity.getReportedAt());
+
         caseEntity.setStatus(caseRequestDTO.getStatus());
 
         if (caseRequestDTO.getCaseDetails() != null) {
             caseEntity.getCaseDetails().clear();
             CaseDetails caseDetail = new CaseDetails();
             caseDetail.setCaseId(caseEntity);
-            caseDetail.setEvidencePath(caseRequestDTO.getCaseDetails().getEvidencePath());
+
             caseDetail.setMarriageDate(caseRequestDTO.getCaseDetails().getMarriageDate());
             caseDetail.setBoyName(caseRequestDTO.getCaseDetails().getBoyName());
             caseDetail.setBoyFatherName(caseRequestDTO.getCaseDetails().getBoyFatherName());
@@ -128,14 +120,8 @@ public class CaseService {
     private CaseResponseDTO mapToResponseDTO(ChildMarriageCase caseEntity) {
         CaseResponseDTO dto = new CaseResponseDTO();
         dto.setId(caseEntity.getId());
-        dto.setComplainantName(caseEntity.getComplainantName());
         dto.setComplainantPhone(caseEntity.getComplainantPhone());
-        dto.setCaseAddress(caseEntity.getCaseAddress());
-        dto.setDistrict(caseEntity.getDistrict());
-        dto.setState(caseEntity.getState());
-        dto.setDescription(caseEntity.getDescription());
         dto.setReportedAt(caseEntity.getReportedAt());
-        dto.setCreatedBy(caseEntity.getCreatedBy());
         dto.setStatus(caseEntity.getStatus());
         dto.setCreatedAt(caseEntity.getCreatedAt());
         dto.setUpdatedAt(caseEntity.getUpdatedAt());
@@ -149,7 +135,6 @@ public class CaseService {
         return new CaseDetailsDTO(
                 caseDetails.getId(),
                 caseDetails.getCaseId().getId(),
-                caseDetails.getEvidencePath(),
                 caseDetails.getCreatedAt(),
                 caseDetails.getUpdatedAt(),
                 caseDetails.getDepartmentMembers(),
@@ -157,12 +142,15 @@ public class CaseService {
                 caseDetails.getMarriageDate(),
                 caseDetails.getBoyName(),
                 caseDetails.getBoyFatherName(),
+                caseDetails.getBoyAddress(),
+                caseDetails.getBoySubdivision(),
                 caseDetails.getGirlName(),
                 caseDetails.getGirlFatherName(),
                 caseDetails.getGirlAddress(),
                 caseDetails.getGirlSubdivision(),
                 caseDetails.getTeamId(),
                 caseDetails.getMarriageAddress(),
+                caseDetails.getMarriagelocationlandmark(),
                 caseDetails.getPoliceStationNearMarriageLocation()
         );
     }

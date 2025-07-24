@@ -23,29 +23,12 @@ public class ChildMarriageCase {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "complainant_name")
-    private String complainantName;
 
     @Column(name = "complainant_phone")
     private String complainantPhone;
 
-    @Column(name = "case_address")  // Added
-    private String caseAddress;
-
-    @Column(name = "district")  // Added
-    private String district;
-
-    @Column(name = "state")  // Added
-    private String state;
-
-    @Column(name = "description")  // Added
-    private String description;
-
     @Column(name = "reported_at")
     private LocalDateTime reportedAt;
-
-    @Column(name = "created_by")
-    private String createdBy;
 
     @Column(name = "status")
     private String status;
@@ -78,4 +61,5 @@ public class ChildMarriageCase {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
 }

@@ -46,7 +46,9 @@ public class TeamFormation {
     @Column(name = "status")
     private Map<String, String> departmentStatuses = new HashMap<>();
 
-    // Dynamic department members (department name -> list of member UUIDs)
+    @Column(name = "locked")
+    private boolean locked = false;
+
     @ElementCollection
     @CollectionTable(name = "team_formation_department_members", joinColumns = @JoinColumn(name = "team_formation_id"))
     @MapKeyColumn(name = "department")
@@ -60,5 +62,13 @@ public class TeamFormation {
     @PreUpdate
     protected void onUpdate() {
         // No specific update logic needed, but can add if required
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public boolean getLocked() {
+        return locked;
     }
 }

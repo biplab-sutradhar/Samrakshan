@@ -15,12 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CaseResponseDTO {
     private UUID id;
-    private String complainantName;
     private String complainantPhone;
-    private String caseAddress;
-    private String district;
-    private String state;
-    private String description;
     private LocalDateTime reportedAt;
     private String createdBy;
     private String status;

@@ -85,11 +85,9 @@ public class PersonService {
             person.setDepartment(dto.getDepartment());
 
             // Lookup post
-            Post post = postRepository.findByPostNameAndDepartment(dto.getDesignation(), dto.getDepartment())
-                    .orElseThrow(() -> new RuntimeException("Post not found for designation: " + dto.getDesignation() + " in department: " + dto.getDepartment()));
             person.setDesignation(dto.getDesignation());
-            person.setRank(post.getRank());
-            person.setPostName(post.getPostName());
+            person.setPostName(dto.getPostName());
+            person.setRank(dto.getRank());
 
             person.setDistrict(dto.getDistrict());
             person.setOfficeName(dto.getOfficeName());

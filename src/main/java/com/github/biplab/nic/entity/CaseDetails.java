@@ -24,9 +24,6 @@ public class CaseDetails {
     @JoinColumn(name = "case_id", nullable = false)
     private ChildMarriageCase caseId;
 
-    @Column(name = "evidence_path")
-    private String evidencePath;
-
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -51,6 +48,12 @@ public class CaseDetails {
     @Column(name = "boy_father_name")
     private String boyFatherName;
 
+    @Column(name = "boy_address")
+    private String boyAddress;
+
+    @Column(name = "boy_subdivision")
+    private String boySubdivision;
+
     @Column(name = "girl_name")
     private String girlName;
 
@@ -68,6 +71,9 @@ public class CaseDetails {
 
     @Column(name = "marriage_address")
     private String marriageAddress;
+
+    @Column(name = "marriage_location_landmark")
+    private String marriagelocationlandmark;
 
     @Column(name = "police_station_near_marriage_location")
     private String policeStationNearMarriageLocation;

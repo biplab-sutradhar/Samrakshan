@@ -50,8 +50,6 @@ public class Person {
     @Column(name = "role", nullable = true)
     private Role role;
 
-
-
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
