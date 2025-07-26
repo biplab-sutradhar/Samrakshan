@@ -1,4 +1,4 @@
-list of **all current endpoints** (✅ implemented) **plus optional/future suggestions** (💡 for future enhancement), organized by controller and grouped by functionality.
+list of **all current endpoints**.
 ---
 
 ### ✅ **1. TeamFormationController**
