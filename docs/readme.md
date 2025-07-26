@@ -45,15 +45,13 @@ list of **all current endpoints**.
 
 ### ✅ **4. CaseController**
 
-| Method  | Endpoint                       | Purpose                        |
-| ------- | ------------------------------ | ------------------------------ |
-| GET     | `/api/cases/{id}`              | Get case by ID                 |
-| GET     | `/api/cases`                   | Get all cases                  |
-| POST    | `/api/cases`                   | Submit/register a new case     |
-| PUT     | `/api/cases/{id}`              | Update case                    |
-| 💡 GET  | `/api/cases/{id}/status`       | 🔍 View current case status    |
-| 💡 POST | `/api/cases/{caseId}/escalate` | 📌 Manually trigger escalation |
-
+| Method | Endpoint                       | Purpose                        |
+|------| ------------------------------ | ------------------------------ |
+| GET  | `/api/cases/{id}`              | Get case by ID                 |
+| GET  | `/api/cases`                   | Get all cases                  |
+| POST | `/api/cases`                   | Submit/register a new case     |
+| PUT  | `/api/cases/{id}`              | Update case                    |
+|  GET | `/api/cases/{id}/status`       | 🔍 View current case status    |
 ---
 
 ### ✅ **5. DepartmentController**
