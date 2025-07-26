@@ -4,11 +4,13 @@ import com.github.biplab.nic.dto.ReportDto.ReportResponseDTO;
 import com.github.biplab.nic.dto.ReportDto.ReportRequestDTO;
 import com.github.biplab.nic.entity.Report;
 import com.github.biplab.nic.service.ReportService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -19,67 +21,88 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReport(@PathVariable Long id, @RequestParam UUID supervisorId) {
-        reportService.deleteReport(id, supervisorId);
-        return ResponseEntity.noContent().build();
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ReportResponseDTO createReport(@Valid @RequestBody ReportRequestDTO dto) {
+        Report report = reportService.submitDepartmentReport(
+                dto.getCaseId(),
+                dto.getPersonId(),
+                dto.getReport(),
+                dto.getDepartment()
+        );
+        return mapToResponse(report);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReportResponseDTO> getReportById(@PathVariable Long id) {
+    public ReportResponseDTO getReport(@PathVariable Long id) {
         Report report = reportService.getReportById(id);
-        return ResponseEntity.ok(toResponseDTO(report)); // Map to DTO
+        return mapToResponse(report);
     }
 
-    @PostMapping
-    public ResponseEntity<ReportResponseDTO> createReport(@RequestBody ReportRequestDTO requestDTO) {
-        Report report = reportService.createReport(requestDTO.getCaseId(), requestDTO.getPersonId(),
-                requestDTO.getContent(), requestDTO.getDepartment());
-        return ResponseEntity.ok(toResponseDTO(report));
+
+    @GetMapping("/team-member/{personId}")
+    public List<ReportResponseDTO> getReportsByPerson(@PathVariable UUID personId) {
+        return reportService.getReportsByPersonId(personId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ReportResponseDTO> updateReport(@PathVariable Long id,
-                                                          @RequestBody ReportRequestDTO requestDTO) {
-        Report updated = reportService.updateReport(id, requestDTO.getPersonId(), requestDTO.getContent());
-        return ResponseEntity.ok(toResponseDTO(updated));
+    public ReportResponseDTO updateReport(
+            @PathVariable Long id,
+            @RequestParam UUID personId,
+            @RequestBody String newContent) {
+        Report report = reportService.updateReport(id, personId, newContent);
+        return mapToResponse(report);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteReport(@PathVariable Long id, @RequestParam UUID supervisorId) {
+        reportService.deleteReport(id, supervisorId);
+    }
+
+
+
+    @PostMapping("/merge")
+    public ReportResponseDTO mergeReports(@RequestParam UUID caseId, @RequestParam UUID supervisorId) {
+        Report finalReport = reportService.mergeReports(caseId, supervisorId);
+        return mapToResponse(finalReport);
     }
 
     @GetMapping("/case/{caseId}")
-    public ResponseEntity<List<ReportResponseDTO>> getReportsByCaseId(@PathVariable UUID caseId) {
-        List<Report> reports = reportService.getReportsByCaseId(caseId);
-        List<ReportResponseDTO> dtos = reports.stream().map(this::toResponseDTO).collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
-
-    @GetMapping("/team-member/{personId}")
-    public ResponseEntity<List<ReportResponseDTO>> getReportsByPersonId(@PathVariable UUID personId) {
-        List<Report> reports = reportService.getReportsByPersonId(personId);
-        List<ReportResponseDTO> dtos = reports.stream().map(this::toResponseDTO).collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
-    @PostMapping("/merge")
-    public ResponseEntity<ReportResponseDTO> mergeReports(@RequestParam UUID caseId,
-                                                          @RequestParam UUID supervisorId,
-                                                          @RequestParam(required = false) String finalSummary) {
-        Report merged = reportService.mergeReports(caseId, supervisorId, finalSummary);
-        return ResponseEntity.ok(toResponseDTO(merged));
+    public List<ReportResponseDTO> getAllReportsByCase(@PathVariable UUID caseId) {
+        return reportService.getReportsByCaseId(caseId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
 
-    // Helper: Map Report entity to ReportResponseDTO (customize as needed)
-    private ReportResponseDTO toResponseDTO(Report report) {
+    @GetMapping("/case/{caseId}/department")
+    public List<ReportResponseDTO> getDepartmentReportsByCase(@PathVariable UUID caseId)  {
+        return reportService.getDepartmentReportsByCaseId(caseId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/case/{caseId}/final")
+    public ResponseEntity<ReportResponseDTO> getFinalReportByCase(@PathVariable UUID caseId)  {
+        Optional<Report> finalReport = reportService.getFinalReportByCaseId(caseId);
+        if (finalReport.isEmpty()) {
+            throw new RuntimeException("No final report found for this case");
+        }
+        return ResponseEntity.ok(mapToResponse(finalReport.get()));
+    }
+
+    private ReportResponseDTO mapToResponse(Report report) {
         ReportResponseDTO dto = new ReportResponseDTO();
         dto.setId(report.getId());
         dto.setCaseId(report.getCaseId());
-        dto.setContent(report.getContent());
         dto.setPersonId(report.getPersonId());
-        dto.setSubmittedAt(report.getSubmittedAt());
+        dto.setReport(report.getReport());
         dto.setDepartment(report.getDepartment());
-        dto.setFinalContent(report.getFinalContent());
-        dto.setIsMerged(report.getIsMerged());
+        dto.setSubmittedAt(report.getSubmittedAt());
+        dto.setIsFinalReport(report.getIsFinalReport());
         return dto;
     }
-
-
 }

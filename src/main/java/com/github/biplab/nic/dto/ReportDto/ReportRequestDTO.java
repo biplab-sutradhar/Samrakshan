@@ -3,10 +3,7 @@ package com.github.biplab.nic.dto.ReportDto;
 import com.github.biplab.nic.enums.Department;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -15,23 +12,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReportRequestDTO {
-    @NotNull(message = "Case ID is required")
-    private UUID caseId;
 
-    @NotNull(message = "Person ID is required")
-    private UUID personId;
+        @NotNull
+        private UUID caseId;
 
-    @NotNull(message = "Submitted by ID is required")
-    private UUID submittedBy;
+        @NotNull
+        private UUID personId;
 
+        @NotBlank
+        private String report;
 
-
-    @NotNull(message = "Department is required")
-    private String department;
-
-    @NotBlank(message = "Content is required")
-    private String content;
-
-    private String finalContent;
-    private Boolean isMerged;
-}
+        @NotBlank
+        private String department;
+    }

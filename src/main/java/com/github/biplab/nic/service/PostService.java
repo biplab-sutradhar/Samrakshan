@@ -1,5 +1,4 @@
 package com.github.biplab.nic.service;
-
 import com.github.biplab.nic.entity.Post;
 import com.github.biplab.nic.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
