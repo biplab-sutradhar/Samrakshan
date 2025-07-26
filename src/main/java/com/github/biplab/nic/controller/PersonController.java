@@ -75,4 +75,14 @@ public class PersonController {
         return personService.search(role, department, rank, district, designation, officeName, status, subdivision, postName);
     }
 
+    @GetMapping("/email")
+    public ResponseEntity<Person> getPersonByEmail(@RequestParam String email) {
+        Person person = personService.getPersonByEmail(email);
+        if (person != null) {
+            return ResponseEntity.ok(person);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

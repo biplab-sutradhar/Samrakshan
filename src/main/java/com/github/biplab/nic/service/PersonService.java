@@ -169,6 +169,9 @@ public class PersonService {
         return personRepository.findByFilters(role, department, rank, district, designation, officeName, status, subdivision, postName);
     }
 
+    public Person getPersonByEmail(String email) {
+        return personRepository.findByEmail(email).orElse(null);
+    }
 
     private PersonResponseDTO mapToResponseDTO(Person person) {
         PersonResponseDTO dto = new PersonResponseDTO();
