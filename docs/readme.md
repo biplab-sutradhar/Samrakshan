@@ -62,7 +62,6 @@ list of **all current endpoints**.
 | GET    | `/api/departments/{id}`                | Get department by ID            |
 | GET    | `/api/departments`                     | List all departments            |
 | GET    | `/api/departments/name/{name}`         | Get department by name          |
-| 💡 GET | `/api/departments/district/{district}` | 💡 List departments by district |
 | POST   | `/api/departments`                     | Create department               |
 | PUT    | `/api/departments/{id}`                | Update department               |
 
