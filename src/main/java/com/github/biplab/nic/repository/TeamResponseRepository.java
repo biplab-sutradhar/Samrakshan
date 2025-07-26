@@ -19,4 +19,5 @@ public interface TeamResponseRepository extends JpaRepository<TeamResponse, UUID
     // New method to find responses by teamId and response
     @Query("SELECT tr FROM TeamResponse tr WHERE tr.teamId = ?1 AND tr.response = ?2")
     List<TeamResponse> findByTeamIdAndResponse(UUID teamId, String response);
+    List<TeamResponse> findByResponse(String response);
 }

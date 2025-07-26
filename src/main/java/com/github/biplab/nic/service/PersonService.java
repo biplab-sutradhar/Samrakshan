@@ -163,6 +163,13 @@ public class PersonService {
         return passwordEncoder.matches(password, person.getPassword());
     }
 
+    public List<Person> search(String role, String department, Integer rank, String district,
+                               String designation, String officeName, String status,
+                               String subdivision, String postName) {
+        return personRepository.findByFilters(role, department, rank, district, designation, officeName, status, subdivision, postName);
+    }
+
+
     private PersonResponseDTO mapToResponseDTO(Person person) {
         PersonResponseDTO dto = new PersonResponseDTO();
         dto.setId(person.getId());

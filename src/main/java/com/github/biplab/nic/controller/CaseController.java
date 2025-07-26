@@ -40,4 +40,11 @@ public class CaseController {
         CaseResponseDTO response = caseService.updateCase(id, caseRequestDTO);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{id}/status")
+    public ResponseEntity<String> getCaseStatus(@PathVariable UUID id) {
+        CaseResponseDTO response = caseService.getCaseById(id);
+        // Assuming getStatus() returns a String status
+        return ResponseEntity.ok(response.getStatus());
+    }
 }

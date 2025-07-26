@@ -1,5 +1,6 @@
 package com.github.biplab.nic.service;
 
+import com.github.biplab.nic.dto.TeamDto.TeamResponseDTO;
 import com.github.biplab.nic.dto.TeamFormationDTO;
 import com.github.biplab.nic.entity.ChildMarriageCase;
 import com.github.biplab.nic.entity.CaseDetails;
@@ -412,6 +413,53 @@ public class TeamFormationService {
         dto.setDepartmentMembers(team.getDepartmentMembers());
         dto.setFormedAt(team.getFormedAt());
         dto.setDepartmentStatuses(team.getDepartmentStatuses());
+        return dto;
+    }
+
+
+    public List<TeamResponseDTO> getPendingResponses() {
+        List<TeamResponse> pendingResponses = teamResponseRepository.findByResponse("PENDING");
+        return pendingResponses.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<TeamResponseDTO> getPendingResponsesByTeam(UUID teamId) {
+        List<TeamResponse> pendingResponses = teamResponseRepository.findByTeamIdAndResponse(teamId, "PENDING");
+        return pendingResponses.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private TeamResponseDTO mapToResponseDTO(TeamResponse response) {
+        TeamResponseDTO dto = new TeamResponseDTO();
+        dto.setId(response.getId());
+        dto.setTeamId(response.getTeamId());
+        dto.setPersonId(response.getPersonId());
+        dto.setResponse(response.getResponse());
+        dto.setRespondedAt(response.getRespondedAt());
+
+
+        try {
+            Person person = personRepository.findById(response.getPersonId()).orElse(null);
+            if (person != null) {
+                dto.setPersonName(String.valueOf(person.getId()));
+                dto.setDepartment(person.getDepartment());
+            }
+        } catch (Exception e) {
+            // Handle silently
+        }
+
+
+        try {
+            TeamFormation team = teamFormationRepository.findById(response.getTeamId()).orElse(null);
+            if (team != null) {
+                dto.setCaseId(team.getCaseId().getId());
+            }
+        } catch (Exception e) {
+            // Handle silently
+        }
+
         return dto;
     }
 }

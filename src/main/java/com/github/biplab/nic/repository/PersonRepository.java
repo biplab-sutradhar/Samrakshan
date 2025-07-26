@@ -38,4 +38,28 @@ public interface PersonRepository extends JpaRepository<Person, UUID> {
     List<String> findDistinctDepartmentsBySubdivision(String subdivision);
 
     List<Person> findByDepartmentAndDistrictAndRoleAndRankGreaterThanEqual(String deptName, String district, Role role, int i);
+
+    @Query("SELECT p FROM Person p " +
+            "WHERE (:role IS NULL OR p.role = :role) " +
+            "AND (:department IS NULL OR p.department = :department) " +
+            "AND (:rank IS NULL OR p.rank = :rank) " +
+            "AND (:district IS NULL OR p.district = :district) " +
+            "AND (:designation IS NULL OR p.designation = :designation) " +
+            "AND (:officeName IS NULL OR p.officeName = :officeName) " +
+            "AND (:status IS NULL OR p.status = :status) " +
+            "AND (:subdivision IS NULL OR p.subdivision = :subdivision) " +
+            "AND (:postName IS NULL OR p.postName = :postName)")
+    List<Person> findByFilters(
+            @Param("role") String role,
+            @Param("department") String department,
+            @Param("rank") Integer rank,
+            @Param("district") String district,
+            @Param("designation") String designation,
+            @Param("officeName") String officeName,
+            @Param("status") String status,
+            @Param("subdivision") String subdivision,
+            @Param("postName") String postName
+    );
+
+
 }

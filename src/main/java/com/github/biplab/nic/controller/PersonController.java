@@ -2,6 +2,7 @@ package com.github.biplab.nic.controller;
 
 import com.github.biplab.nic.dto.PersonDto.PersonRequestDTO;
 import com.github.biplab.nic.dto.PersonDto.PersonResponseDTO;
+import com.github.biplab.nic.entity.Person;
 import com.github.biplab.nic.service.PersonService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -58,4 +59,20 @@ public class PersonController {
             return ResponseEntity.status(401).body("Invalid email or password");
         }
     }
+
+    @GetMapping("/search")
+    public List<Person> searchPersons(
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) Integer rank,
+            @RequestParam(required = false) String district,
+            @RequestParam(required = false) String designation,
+            @RequestParam(required = false) String officeName,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String subdivision,
+            @RequestParam(required = false) String postName
+    ) {
+        return personService.search(role, department, rank, district, designation, officeName, status, subdivision, postName);
+    }
+
 }
