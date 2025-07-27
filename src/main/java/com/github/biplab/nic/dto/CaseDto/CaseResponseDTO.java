@@ -22,4 +22,5 @@ public class CaseResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<CaseDetailsDTO> caseDetails;
+
 }

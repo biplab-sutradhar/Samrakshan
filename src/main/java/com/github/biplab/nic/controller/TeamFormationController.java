@@ -1,8 +1,10 @@
 package com.github.biplab.nic.controller;
 
+import com.github.biplab.nic.dto.TeamDto.ManualTeamFormationRequest;
 import com.github.biplab.nic.dto.TeamDto.TeamResponseDTO;
 import com.github.biplab.nic.dto.TeamFormationDTO;
 import com.github.biplab.nic.service.TeamFormationService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,11 @@ public class TeamFormationController {
 
     @Autowired
     private TeamFormationService teamFormationService;
+
+    @GetMapping("/teams")
+    public List<TeamFormationDTO> getAllTeams() {
+        return teamFormationService.getAllTeams();
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<TeamFormationDTO> getTeamFormationById(@PathVariable UUID id) {
@@ -87,5 +94,11 @@ public class TeamFormationController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PostMapping("/manual")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TeamFormationDTO createManualTeam(@Valid @RequestBody ManualTeamFormationRequest req) {
+        return teamFormationService.createManualTeam(req);
     }
 }

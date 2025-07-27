@@ -85,4 +85,16 @@ public class PersonController {
         }
     }
 
+    @GetMapping("/name")
+    public ResponseEntity<PersonResponseDTO> getPersonByName(
+            @RequestParam String firstName,
+            @RequestParam String lastName) {
+        try {
+            PersonResponseDTO person = personService.getPersonByName(firstName, lastName);
+            return ResponseEntity.ok(person);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

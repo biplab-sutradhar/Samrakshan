@@ -1,5 +1,6 @@
 package com.github.biplab.nic.service;
 
+import com.github.biplab.nic.dto.TeamDto.ManualTeamFormationRequest;
 import com.github.biplab.nic.dto.TeamDto.TeamResponseDTO;
 import com.github.biplab.nic.dto.TeamFormationDTO;
 import com.github.biplab.nic.entity.ChildMarriageCase;
@@ -15,6 +16,7 @@ import com.github.biplab.nic.repository.DepartmentRepository;
 import com.github.biplab.nic.repository.PersonRepository;
 import com.github.biplab.nic.repository.TeamFormationRepository;
 import com.github.biplab.nic.repository.TeamResponseRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -430,6 +432,82 @@ public class TeamFormationService {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    public List<TeamFormationDTO> getAllTeams() {
+        List<TeamFormation> teams = teamFormationRepository.findAll();
+        return teams.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // TeamFormationService.java
+    @Transactional
+    public TeamFormationDTO createManualTeam(ManualTeamFormationRequest req) {
+
+        // 1.  basic entity look-ups
+        ChildMarriageCase cmCase = caseRepository.findById(req.getCaseId())
+                .orElseThrow(() -> new RuntimeException("Case not found"));
+        Person supervisor = personRepository.findById(req.getSupervisorId())
+                .orElseThrow(() -> new RuntimeException("Supervisor not found"));
+
+        if (supervisor.getRole() != Role.SUPERVISOR || supervisor.getRank() > 1)
+            throw new RuntimeException("Supervisor must be rank <= 1");
+
+        // 2.  validate each department & person
+        Map<String,List<UUID>> deptMembers = new HashMap<>();
+        for (Map.Entry<String,List<UUID>> e : req.getDepartmentMembers().entrySet()) {
+            String dept = e.getKey();
+            if (!departmentRepository.existsByName(dept))
+                throw new RuntimeException("Unknown department: " + dept);
+
+            List<UUID> goodIds = new ArrayList<>();
+            for (UUID pid : e.getValue()) {
+                Person p = personRepository.findById(pid)
+                        .orElseThrow(() -> new RuntimeException("Person "+pid+" not found"));
+                if (!dept.equalsIgnoreCase(p.getDepartment()))
+                    throw new RuntimeException("Person "+pid+" is not in department "+dept);
+                goodIds.add(pid);
+            }
+            deptMembers.put(dept, goodIds);
+        }
+
+        // 3.  persist TeamFormation
+        TeamFormation team = new TeamFormation();
+        team.setCaseId(cmCase);
+        team.setSupervisor(supervisor);
+        team.setMemberIds(
+                deptMembers.values().stream()
+                        .flatMap(List::stream)
+                        .collect(Collectors.toList()));
+        team.setDepartmentMembers(deptMembers);
+
+        // all departments are accepted immediately
+        Map<String,String> statuses = deptMembers.keySet()
+                .stream()
+                .collect(Collectors.toMap(d -> d, d -> "ACCEPTED"));
+        team.setDepartmentStatuses(statuses);
+        team.setFormedAt(LocalDateTime.now());
+        teamFormationRepository.save(team);
+
+        // 4.  create TeamResponse rows (optional, mark “ACCEPTED”)
+        TeamResponse supResp = new TeamResponse(null, team.getTeamId(),
+                supervisor.getId(),"ACCEPTED",
+                LocalDateTime.now());
+        teamResponseRepository.save(supResp);
+
+        for (UUID pid : team.getMemberIds()) {
+            TeamResponse r = new TeamResponse(null, team.getTeamId(),
+                    pid,"ACCEPTED",LocalDateTime.now());
+            teamResponseRepository.save(r);
+        }
+
+        // 5.  mark case  “IN_PROGRESS”
+        cmCase.setStatus("IN_PROGRESS");
+        caseRepository.save(cmCase);
+
+        return mapToDTO(team);   // existing helper
+    }
+
 
     private TeamResponseDTO mapToResponseDTO(TeamResponse response) {
         TeamResponseDTO dto = new TeamResponseDTO();

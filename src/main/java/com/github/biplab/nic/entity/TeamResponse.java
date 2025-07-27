@@ -26,7 +26,7 @@ public class TeamResponse {
     private UUID personId;
 
     @Column(name = "response", nullable = false)
-    private String response; // "ACCEPTED", "REJECTED", "PENDING"
+    private String response;
 
     @Column(name = "responded_at")
     private LocalDateTime respondedAt;

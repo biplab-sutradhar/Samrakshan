@@ -4,13 +4,13 @@ import com.github.biplab.nic.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface PersonRepository extends JpaRepository<Person, UUID> {
     Optional<Person> findByEmail(String email);
-
 
     List<Person> findByRoleAndSubdivision(Role role, String subdivision);
 
@@ -61,5 +61,5 @@ public interface PersonRepository extends JpaRepository<Person, UUID> {
             @Param("postName") String postName
     );
 
-
+    Optional<Person> findByFirstNameAndLastName(String firstName, String lastName);
 }

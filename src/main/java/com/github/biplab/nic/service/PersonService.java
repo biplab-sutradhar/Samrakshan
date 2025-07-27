@@ -173,6 +173,18 @@ public class PersonService {
         return personRepository.findByEmail(email).orElse(null);
     }
 
+    // In PersonService.java
+    public PersonResponseDTO getPersonByName(String firstName, String lastName) {
+        Person person = personRepository.findByFirstNameAndLastName(firstName, lastName)
+                .orElseThrow(() -> new RuntimeException("Person not found with name: " + firstName + " " + lastName));
+        PersonResponseDTO dto = new PersonResponseDTO();
+        dto.setId(person.getId());
+        dto.setFirstName(person.getFirstName());
+        dto.setLastName(person.getLastName());
+        // Map other fields as needed
+        return dto;
+    }
+
     private PersonResponseDTO mapToResponseDTO(Person person) {
         PersonResponseDTO dto = new PersonResponseDTO();
         dto.setId(person.getId());
