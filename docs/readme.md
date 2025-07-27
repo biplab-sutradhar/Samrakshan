@@ -7,9 +7,11 @@ list of **all current endpoints**.
 | ------- | ---------------------------------------- | ------------------------------------------- |
 | GET     | `/api/team-formations/{id}`              | Get team formation by ID                    |
 | GET     | `/api/team-formations/case/{caseId}`     | Get team formation by case ID               |
-| 💡 POST | `/api/team-formations`                   | (Used internally) Create a team manually    |
-| 💡 PUT  | `/api/team-formations/{id}/response`     | Team member accepts/rejects notification    |
-| 💡 GET  | `/api/team-formations/pending-responses` | 🔍 View pending responses from team members |
+|  POST | `/api/team-formations`                   | (Used internally) Create a team manually    |
+|  PUT  | `/api/team-formations/{id}/response`     | Team member accepts/rejects notification    |
+|  GET  | `/api/team-formations/pending-responses` | 🔍 View pending responses from team members |
+| POST  | 	/api/team-formations/manual	             |  Manually create a team formation           |
+|  GET  | 	/api/team-formations/teams	              |  Get all added team details                 |
 
 ---
 
