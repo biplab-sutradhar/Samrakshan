@@ -32,7 +32,7 @@ public class PersonRequestDTO {
     private String address;
 
     @NotBlank(message = "Role is required")
-    private String role; // Enum as String
+    private String role;
 
     private String department;
 

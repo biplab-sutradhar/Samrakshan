@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -166,8 +167,53 @@ public class PersonService {
     public List<Person> search(String role, String department, Integer rank, String district,
                                String designation, String officeName, String status,
                                String subdivision, String postName) {
-        return personRepository.findByFilters(role, department, rank, district, designation, officeName, status, subdivision, postName);
+
+
+        Role roleEnum = null;
+        if (role != null && !role.trim().isEmpty()) {
+            try {
+                roleEnum = Role.valueOf(role.toUpperCase().trim());
+            } catch (IllegalArgumentException e) {
+                return Collections.emptyList(); // Invalid role
+            }
+        }
+
+        // Normalize string parameters for case-insensitive search
+        String normalizedDepartment = normalizeString(department);
+        String normalizedDistrict = normalizeString(district);
+        String normalizedDesignation = normalizeString(designation);
+        String normalizedOfficeName = normalizeString(officeName);
+        String normalizedStatus = normalizeString(status);
+        String normalizedSubdivision = normalizeString(subdivision);
+        String normalizedPostName = normalizeString(postName);
+
+        // Get all results from repository
+        List<Person> allResults = personRepository.findByFilters(
+                roleEnum, null, rank, null, null, null, null, null, null
+        );
+
+        // Filter in memory for case-insensitive matching
+        return allResults.stream()
+                .filter(p -> matchesString(p.getDepartment(), normalizedDepartment))
+                .filter(p -> matchesString(p.getDistrict(), normalizedDistrict))
+                .filter(p -> matchesString(p.getDesignation(), normalizedDesignation))
+                .filter(p -> matchesString(p.getOfficeName(), normalizedOfficeName))
+                .filter(p -> matchesString(p.getStatus(), normalizedStatus))
+                .filter(p -> matchesString(p.getSubdivision(), normalizedSubdivision))
+                .filter(p -> matchesString(p.getPostName(), normalizedPostName))
+                .collect(Collectors.toList());
     }
+
+    private String normalizeString(String input) {
+        return input != null ? input.trim().toUpperCase() : null;
+    }
+
+    private boolean matchesString(String fieldValue, String searchValue) {
+        if (searchValue == null) return true; // No filter applied
+        if (fieldValue == null) return false;
+        return fieldValue.toUpperCase().equals(searchValue);
+    }
+
 
     public Person getPersonByEmail(String email) {
         return personRepository.findByEmail(email).orElse(null);

@@ -50,7 +50,7 @@ public interface PersonRepository extends JpaRepository<Person, UUID> {
             "AND (:subdivision IS NULL OR p.subdivision = :subdivision) " +
             "AND (:postName IS NULL OR p.postName = :postName)")
     List<Person> findByFilters(
-            @Param("role") String role,
+            @Param("role") Role role,
             @Param("department") String department,
             @Param("rank") Integer rank,
             @Param("district") String district,
@@ -60,6 +60,7 @@ public interface PersonRepository extends JpaRepository<Person, UUID> {
             @Param("subdivision") String subdivision,
             @Param("postName") String postName
     );
+
 
     Optional<Person> findByFirstNameAndLastName(String firstName, String lastName);
 }

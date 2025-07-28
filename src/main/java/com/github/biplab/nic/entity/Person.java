@@ -59,8 +59,10 @@ public class Person {
     @Column(name = "password", nullable = false)
     private String password;
 
+
     @Column(name = "district")
     private String district;
+
 
     @Column(name = "office_name")
     private String officeName;
