@@ -1,8 +1,11 @@
 package com.github.biplab.nic.controller;
 
+import com.github.biplab.nic.dto.FeedbackDTO.FeedbackRequestDTO;
+import com.github.biplab.nic.dto.FeedbackDTO.FeedbackResponseDTO;
 import com.github.biplab.nic.dto.ReportDto.ReportResponseDTO;
 import com.github.biplab.nic.dto.ReportDto.ReportRequestDTO;
 import com.github.biplab.nic.entity.Report;
+import com.github.biplab.nic.entity.ReportFeedback;
 import com.github.biplab.nic.service.ReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -93,6 +96,36 @@ public class ReportController {
         }
         return ResponseEntity.ok(mapToResponse(finalReport.get()));
     }
+
+    // Add to ReportController.java
+
+    @PostMapping("/{reportId}/feedback")
+    @ResponseStatus(HttpStatus.CREATED)
+    public FeedbackResponseDTO giveFeedback(
+            @PathVariable Long reportId,
+            @RequestParam UUID supervisorId,
+            @RequestBody String feedbackMessage) {
+
+        FeedbackRequestDTO dto = new FeedbackRequestDTO();
+        dto.setReportId(reportId);
+        dto.setSupervisorId(supervisorId);
+        dto.setFeedbackMessage(feedbackMessage);
+
+        ReportFeedback feedback = reportService.giveFeedback(dto);
+        return reportService.mapToFeedbackResponse(feedback);
+    }
+
+    @GetMapping("/feedback/pending")
+    public List<FeedbackResponseDTO> getPendingFeedback(@RequestParam UUID personId) {
+        return reportService.getPendingFeedbackForPerson(personId);
+    }
+
+    @GetMapping("/{reportId}/feedback")
+    public List<FeedbackResponseDTO> getFeedbackForReport(@PathVariable Long reportId) {
+        // Get all feedback for a specific report
+        return reportService.getFeedbackForReport(reportId);
+    }
+
 
     private ReportResponseDTO mapToResponse(Report report) {
         ReportResponseDTO dto = new ReportResponseDTO();
