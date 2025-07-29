@@ -126,6 +126,53 @@ public class ReportController {
         return reportService.getFeedbackForReport(reportId);
     }
 
+    // Add to ReportSearchController.java
+
+    @GetMapping("/boy-subdivision/{subdivision}")
+    public List<ReportResponseDTO> searchByBoySubdivision(@PathVariable String subdivision) {
+        return reportService.searchByBoySubdivision(subdivision).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/girl-subdivision/{subdivision}")
+    public List<ReportResponseDTO> searchByGirlSubdivision(@PathVariable String subdivision) {
+        return reportService.searchByGirlSubdivision(subdivision).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/marriage-address")
+    public List<ReportResponseDTO> searchByMarriageAddress(@RequestParam String address) {
+        return reportService.searchByMarriageAddress(address).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/police-station/{policeStation}")
+    public List<ReportResponseDTO> searchByPoliceStation(@PathVariable String policeStation) {
+        return reportService.searchByPoliceStation(policeStation).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Updated filter endpoint
+    @GetMapping("/filter")
+    public List<ReportResponseDTO> searchWithFilters(
+            @RequestParam(required = false) String boySubdivision,
+            @RequestParam(required = false) String girlSubdivision,
+            @RequestParam(required = false) String marriageAddress,
+            @RequestParam(required = false) String policeStation,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+
+        return reportService.searchWithFilters(boySubdivision, girlSubdivision,
+                        marriageAddress, policeStation, year, month).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+
 
     private ReportResponseDTO mapToResponse(Report report) {
         ReportResponseDTO dto = new ReportResponseDTO();

@@ -34,7 +34,7 @@ public class Report {
     private String report;
 
     @Column(name = "is_final_report", nullable = false)
-    private Boolean isFinalReport = false; // Fixed typo
+    private Boolean isFinalReport = false;
 
     @PrePersist
     protected void onCreate() {

@@ -16,9 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -142,6 +140,65 @@ public class ReportService {
     public Optional<Report> getFinalReportByCaseId(UUID caseId) {
         return reportRepository.findByCaseIdAndIsFinalReportTrue(caseId);
     }
+
+    // Update ReportService.java methods
+
+    public List<Report> searchByBoySubdivision(String subdivision) {
+        return reportRepository.findByBoySubdivision(subdivision);
+    }
+
+    public List<Report> searchByGirlSubdivision(String subdivision) {
+        return reportRepository.findByGirlSubdivision(subdivision);
+    }
+
+    public List<Report> searchByMarriageAddress(String address) {
+        return reportRepository.findByMarriageAddress(address);
+    }
+
+    public List<Report> searchByPoliceStation(String policeStation) {
+        return reportRepository.findByPoliceStation(policeStation);
+    }
+
+    public List<Report> searchWithFilters(String boySubdivision, String girlSubdivision,
+                                          String marriageAddress, String policeStation,
+                                          Integer year, Integer month) {
+        return reportRepository.findByMultipleFilters(boySubdivision, girlSubdivision,
+                marriageAddress, policeStation, year, month);
+    }
+
+    // Updated yearly summary with case details filters
+    public Map<String, Object> getYearlyReportSummaryWithFilters(int year, String boySubdivision,
+                                                                 String girlSubdivision, String marriageAddress) {
+        List<Object[]> monthlyData = reportRepository.getMonthlyReportCountsByYearWithFilters(
+                year, boySubdivision, girlSubdivision, marriageAddress);
+
+        // Same processing logic as before...
+        Map<String, Long> monthlyBreakdown = new LinkedHashMap<>();
+        String[] monthNames = {
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+        };
+
+        for (String monthName : monthNames) {
+            monthlyBreakdown.put(monthName, 0L);
+        }
+
+        for (Object[] row : monthlyData) {
+            Integer month = (Integer) row[0];
+            Long count = (Long) row[1];
+            monthlyBreakdown.put(monthNames[month - 1], count);
+        }
+
+        long totalReports = monthlyBreakdown.values().stream().mapToLong(Long::longValue).sum();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("year", year);
+        result.put("totalReports", totalReports);
+        result.put("monthlyBreakdown", monthlyBreakdown);
+
+        return result;
+    }
+
 
     // Merge reports into a single final report
     @Transactional
